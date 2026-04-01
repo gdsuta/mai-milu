@@ -118,6 +118,12 @@ export default function LoginPage() {
           Belum punya akun? <Link href="/register" className="text-blue-600 font-bold hover:underline">Daftar di sini</Link>
         </p>
 
+      {/* --- TEKS CREDIT DEVELOPER --- */}
+        <div className="mt-8 text-center text-xs text-gray-400">
+          <p>Developed by Gede Suta Pinatih</p>
+          <p>Mai-Milu Web App v1.0.0</p>
+        </div>
+
       </div>
     </div>
   )
