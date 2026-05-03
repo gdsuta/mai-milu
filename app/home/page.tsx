@@ -36,6 +36,10 @@ export default async function HomePage() {
     redirect('/verification')
   }
 
+  // Auto-expire: only fetch rides whose departure time is in the future.
+  // This prevents stale rides from showing without needing a manual cleanup job.
+  const now = new Date().toISOString()
+
   const { data: rides } = await supabase
     .from('rides')
     .select(`
@@ -43,6 +47,7 @@ export default async function HomePage() {
       profiles:driver_id (full_name, avatar_url, phone_number)
     `)
     .eq('status', 'tersedia')
+    .gte('departure_time', now)
     .order('departure_time', { ascending: true })
 
   async function deleteRide(formData: FormData) {
@@ -88,8 +93,11 @@ export default async function HomePage() {
           {(!rides || rides.length === 0) ? (
             <div className="bg-white p-10 rounded-xl shadow-sm border border-gray-200 text-center mt-2">
               <div className="text-5xl mb-4">🚗</div>
-              <h3 className="text-lg font-bold text-gray-700 mb-2">Belum ada tumpangan hari ini</h3>
-              <p className="text-gray-500">Jadilah yang pertama menawarkan tumpangan untuk tetangga Anda!</p>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">Belum ada tumpangan tersedia saat ini</h3>
+              <p className="text-gray-500 mb-4">Tumpangan yang sudah lewat waktunya disembunyikan otomatis. Jadilah yang pertama menawarkan!</p>
+              <a href="/offer-ride" className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition text-sm">
+                ➕ Tawarkan Tumpangan
+              </a>
             </div>
           ) : (
             <div className="space-y-4">
@@ -98,6 +106,8 @@ export default async function HomePage() {
                 const tanggal = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })
                 const jam = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
                 const isOwner = user.id === ride.driver_id
+                const minutesUntilDeparture = Math.floor((dateObj.getTime() - Date.now()) / 60000)
+                const isExpiringSoon = minutesUntilDeparture <= 120 // within 2 hours
 				let waNumber = ride.profiles?.phone_number.replace(/[^0-9]/g, '') || ''
                 if (waNumber.startsWith('0')) {
                   waNumber = '62' + waNumber.substring(1)
@@ -107,6 +117,11 @@ export default async function HomePage() {
                     {isOwner && (
                       <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">
                         Tumpangan Anda
+                      </div>
+                    )}
+                    {!isOwner && isExpiringSoon && (
+                      <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg animate-pulse">
+                        ⚡ Segera Berangkat!
                       </div>
                     )}
 

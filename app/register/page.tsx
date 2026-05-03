@@ -60,17 +60,18 @@ export default function RegisterPage() {
         ktpUrl = ktpPath 
       }
 
+      // Using upsert instead of update to safely handle retries.
+      // If the DB trigger already created a profile row, this updates it.
+      // If somehow no row exists yet, this inserts it. Either way, no crash.
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
           id: userId,
           full_name: formData.fullName,
           phone_number: formData.phone,
           home_address: formData.address,
           avatar_url: avatarUrl,
-          ktp_url: ktpUrl,
-          verification_status: 'pending',
-          role: 'user'
+          ktp_url: ktpUrl
         })
 
       if (profileError) throw profileError
