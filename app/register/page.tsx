@@ -37,13 +37,37 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      // If signUp fails because the email already exists (partial registration -
+      // auth was created but profile fill-in failed), we sign in with the same
+      // credentials to recover the session and continue to fill the profile.
+      let userId: string | undefined
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       })
-      if (authError) throw authError
-      
-      const userId = authData.user?.id
+
+      if (authError) {
+        if (authError.message === 'User already registered') {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          })
+          if (signInError) {
+            throw new Error(
+              'Email ini sudah terdaftar namun pendaftaran sebelumnya tidak selesai. ' +
+              'Pastikan kata sandi sama dengan percobaan pertama, ' +
+              'atau gunakan fitur \"Lupa Sandi\" untuk mengatur ulang.'
+            )
+          }
+          userId = signInData.user?.id
+        } else {
+          throw authError
+        }
+      } else {
+        userId = authData.user?.id
+      }
+
       if (!userId) throw new Error("Gagal membuat akun pengguna.")
 
       let avatarUrl = ''
@@ -60,9 +84,6 @@ export default function RegisterPage() {
         ktpUrl = ktpPath 
       }
 
-      // Using upsert instead of update to safely handle retries.
-      // If the DB trigger already created a profile row, this updates it.
-      // If somehow no row exists yet, this inserts it. Either way, no crash.
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
