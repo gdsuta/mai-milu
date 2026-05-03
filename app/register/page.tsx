@@ -37,63 +37,49 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // If signUp fails because the email already exists (partial registration -
-      // auth was created but profile fill-in failed), we sign in with the same
-      // credentials to recover the session and continue to fill the profile.
-      let userId: string | undefined
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       })
-
-      if (authError) {
-        if (authError.message === 'User already registered') {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          })
-          if (signInError) {
-            throw new Error(
-              'Email ini sudah terdaftar namun pendaftaran sebelumnya tidak selesai. ' +
-              'Pastikan kata sandi sama dengan percobaan pertama, ' +
-              'atau gunakan fitur \"Lupa Sandi\" untuk mengatur ulang.'
-            )
-          }
-          userId = signInData.user?.id
-        } else {
-          throw authError
-        }
-      } else {
-        userId = authData.user?.id
-      }
-
+      if (authError) throw authError
+      
+      const userId = authData.user?.id
       if (!userId) throw new Error("Gagal membuat akun pengguna.")
 
+      // --- Avatar Upload ---
       let avatarUrl = ''
       if (avatarFile) {
-        const avatarPath = `${userId}/selfie-${Date.now()}`
-        await supabase.storage.from('avatars').upload(avatarPath, avatarFile)
+        const avatarExt = avatarFile.name.split('.').pop()
+        const avatarPath = `${userId}/selfie-${Date.now()}.${avatarExt}`
+        const { error: avatarError } = await supabase.storage
+          .from('avatars')
+          .upload(avatarPath, avatarFile, { contentType: avatarFile.type })
+        if (avatarError) throw new Error('Gagal mengunggah foto selfie: ' + avatarError.message)
         avatarUrl = supabase.storage.from('avatars').getPublicUrl(avatarPath).data.publicUrl
       }
 
+      // --- KTP Upload ---
       let ktpUrl = ''
       if (ktpFile) {
-        const ktpPath = `${userId}/ktp-${Date.now()}`
-        await supabase.storage.from('identity_docs').upload(ktpPath, ktpFile)
-        ktpUrl = ktpPath 
+        const ktpExt = ktpFile.name.split('.').pop()
+        const ktpPath = `${userId}/ktp-${Date.now()}.${ktpExt}`
+        const { error: ktpError } = await supabase.storage
+          .from('identity_docs')
+          .upload(ktpPath, ktpFile, { contentType: ktpFile.type })
+        if (ktpError) throw new Error('Gagal mengunggah foto KTP: ' + ktpError.message)
+        ktpUrl = ktpPath
       }
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          id: userId,
+        .update({
           full_name: formData.fullName,
           phone_number: formData.phone,
           home_address: formData.address,
           avatar_url: avatarUrl,
           ktp_url: ktpUrl
         })
+        .eq('id', userId)
 
       if (profileError) throw profileError
 
