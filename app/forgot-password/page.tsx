@@ -20,9 +20,23 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
+      // Step 1: Check if this email is actually registered.
+      // supabase.auth.resetPasswordForEmail() always returns success even for
+      // unknown emails (anti-enumeration by design), so we verify first using
+      // our secure DB function.
+      const { data: isRegistered, error: checkError } = await supabase
+        .rpc('check_email_registered', { email_input: email })
+
+      if (checkError) throw checkError
+
+      if (!isRegistered) {
+        alert('Email ini tidak terdaftar di Mai-Milu. Pastikan Anda menggunakan email yang sama saat mendaftar, atau daftar akun baru.')
+        setLoading(false)
+        return
+      }
+
+      // Step 2: Email is valid — send the reset link.
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // PERBAIKAN: Arahkan tautan email ke rute 'auth/callback' terlebih dahulu untuk membuat sesi,
-        // lalu biarkan sistem yang meneruskannya (?next=) ke halaman update-password.
         redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
       })
       if (error) throw error
