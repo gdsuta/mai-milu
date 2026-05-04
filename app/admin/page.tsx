@@ -137,35 +137,25 @@ export default async function AdminDashboard() {
             <p className="text-gray-500">Belum ada pengguna yang diverifikasi.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden border">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b">
-                  <th className="p-4 text-sm font-semibold text-gray-600">Nama Lengkap</th>
-                  <th className="p-4 text-sm font-semibold text-gray-600">No. WhatsApp</th>
-                  <th className="p-4 text-sm font-semibold text-gray-600 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {verifiedUsers.map((u) => (
-                  <tr key={u.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-semibold text-gray-800 flex items-center gap-3">
-                      {u.avatar_url ? <img src={u.avatar_url} className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs">👤</div>}
-                      {u.full_name}
-                    </td>
-                    <td className="p-4 text-gray-600">{u.phone_number}</td>
-                    <td className="p-4 text-center">
-                      <form action={revokeAccess}>
-                        <input type="hidden" name="userId" value={u.id} />
-                        <button type="submit" className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-1 rounded border border-red-200">
-                          Cabut Akses
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {verifiedUsers.map((u) => (
+              <div key={u.id} className="bg-white rounded-lg shadow-sm border p-4 flex flex-row items-center gap-3">
+                {u.avatar_url
+                  ? <img src={u.avatar_url} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  : <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm flex-shrink-0">👤</div>
+                }
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-800 truncate">{u.full_name}</p>
+                  <p className="text-sm text-gray-500 truncate">📞 {u.phone_number}</p>
+                </div>
+                <form action={revokeAccess} className="flex-shrink-0">
+                  <input type="hidden" name="userId" value={u.id} />
+                  <button type="submit" className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-2 rounded-lg border border-red-200 whitespace-nowrap">
+                    Cabut Akses
+                  </button>
+                </form>
+              </div>
+            ))}
           </div>
         )}
 

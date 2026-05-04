@@ -120,7 +120,11 @@ export default function OfferRidePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!userProfile?.id) return setLoading(true)
+    if (!userProfile?.id) {
+      alert("Profil pengguna belum dimuat. Silakan tunggu sebentar dan coba lagi.")
+      return
+    }
+    setLoading(true)
 
     try {
       const departureTimestamp = new Date(`${formData.departureDate}T${formData.departureTime}`).toISOString()
