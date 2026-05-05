@@ -137,9 +137,9 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
           <div className="flex-1 text-xs text-gray-600 space-y-1">
             <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize!)}</span></p>
             <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize!)}</span></p>
-            {savedPercent > 0
+            {savedPercent !== null && (savedPercent > 0
               ? <p className="text-green-600 font-semibold">✅ Dihemat {savedPercent}%</p>
-              : <p className="text-gray-400">Gambar sudah optimal.</p>}
+              : <p className="text-gray-400">Gambar sudah optimal.</p>)}
             <button type="button" onClick={() => { setPreview(null); setOriginalSize(null); setCompressedSize(null); onFileReady(null) }}
               className="text-red-500 hover:text-red-700 font-semibold pt-1">
               × Ganti Foto
