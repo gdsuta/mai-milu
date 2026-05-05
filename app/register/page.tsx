@@ -64,8 +64,8 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
   const [compressing, setCompressing] = useState<boolean>(false)
 
   // Two hidden inputs: one opens the camera, one opens the gallery
-  const cameraInputRef = useRef(null)
-  const galleryInputRef = useRef(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const bg      = colorScheme === 'blue' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'
   const text    = colorScheme === 'blue' ? 'text-blue-800' : 'text-red-800'
