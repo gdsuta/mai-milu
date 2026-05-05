@@ -135,8 +135,8 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
         <div className="flex items-start gap-3">
           <img src={preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg border shadow-sm flex-shrink-0" />
           <div className="flex-1 text-xs text-gray-600 space-y-1">
-            <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize)}</span></p>
-            <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize)}</span></p>
+            <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize!)}</span></p>
+            <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize!)}</span></p>
             {savedPercent > 0
               ? <p className="text-green-600 font-semibold">✅ Dihemat {savedPercent}%</p>
               : <p className="text-gray-400">Gambar sudah optimal.</p>}
