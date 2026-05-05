@@ -52,7 +52,7 @@ type ImageUploadFieldProps = {
   colorScheme: 'blue' | 'red'
   maxWidth: number
   quality: number
-  capture: string
+  capture: boolean | 'user' | 'environment'
   required?: boolean
   onFileReady: (file: File | null) => void
 }
