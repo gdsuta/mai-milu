@@ -9,8 +9,6 @@ import Image from 'next/image'
 // ─────────────────────────────────────────────
 // CLIENT-SIDE IMAGE COMPRESSION
 // Uses the browser Canvas API — zero dependencies.
-// selfie → max 800px,  JPEG 0.82 → ~150–250 KB
-// KTP    → max 1400px, JPEG 0.88 → ~300–500 KB (legible for admin)
 // ─────────────────────────────────────────────
 async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -40,7 +38,9 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
   })
 }
 
-function formatBytes(bytes: number): string {
+// 1. PERBAIKAN: Menangani null secara resmi agar kebal dari error TypeScript
+function formatBytes(bytes: number | null): string {
+  if (!bytes) return '0 B'
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
@@ -63,7 +63,6 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
   const [compressedSize, setCompressedSize] = useState<number | null>(null)
   const [compressing, setCompressing] = useState<boolean>(false)
 
-  // Two hidden inputs: one opens the camera, one opens the gallery
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
 
@@ -84,8 +83,10 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
       reader.onload = ev => setPreview(ev.target?.result as string ?? null)
       reader.readAsDataURL(compressed)
       onFileReady(compressed)
-    } catch (err: any) {
-      alert('Gagal memproses gambar: ' + err.message)
+    } catch (err) {
+      // 2. PERBAIKAN: Penanganan tipe error yang aman
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak dikenal'
+      alert('Gagal memproses gambar: ' + errorMessage)
       onFileReady(null)
     } finally {
       setCompressing(false)
@@ -101,13 +102,11 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
       <label className={'block text-sm font-bold ' + text + ' mb-1'}>{label}</label>
       <p className={'text-xs ' + subtext + ' mb-3'}>{hint}</p>
 
-      {/* Hidden inputs — camera and gallery separately */}
-      <input ref={cameraInputRef} type="file" accept="image/*" capture={capture}
+      <input ref={cameraInputRef} type="file" accept="image/*" capture={capture as any}
         className="hidden" onChange={e => processFile(e.target.files?.[0])} />
       <input ref={galleryInputRef} type="file" accept="image/*"
         className="hidden" onChange={e => processFile(e.target.files?.[0])} />
 
-      {/* Two explicit buttons */}
       {!preview && !compressing && (
         <div className="flex gap-2">
           <button type="button" onClick={() => cameraInputRef.current?.click()}
@@ -135,8 +134,8 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
         <div className="flex items-start gap-3">
           <img src={preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg border shadow-sm flex-shrink-0" />
           <div className="flex-1 text-xs text-gray-600 space-y-1">
-            <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize!)}</span></p>
-            <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize!)}</span></p>
+            <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize)}</span></p>
+            <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize)}</span></p>
             {savedPercent !== null && (savedPercent > 0
               ? <p className="text-green-600 font-semibold">✅ Dihemat {savedPercent}%</p>
               : <p className="text-gray-400">Gambar sudah optimal.</p>)}
@@ -152,9 +151,10 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
 }
 
 export default function RegisterPage() {
+  // 3. PERBAIKAN: Menambahkan non-null assertion (!) agar TypeScript tidak komplain
   const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -169,20 +169,26 @@ export default function RegisterPage() {
     if (!agreedToTerms) { alert('Ups! Anda harus menyetujui Syarat & Ketentuan serta Kebijakan Privasi Mai-Milu sebelum mendaftar.'); return }
     setLoading(true)
     try {
-      let userId
+      let userId: string | undefined
       const { data: authData, error: authError } = await supabase.auth.signUp({ email: formData.email, password: formData.password })
+      
       if (authError) {
         if (authError.message === 'User already registered') {
           const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: formData.email, password: formData.password })
           if (signInError) throw new Error('Email ini sudah terdaftar namun pendaftaran sebelumnya tidak selesai. Pastikan kata sandi sama dengan percobaan pertama, atau gunakan fitur "Lupa Sandi".')
           userId = signInData.user?.id
-        } else throw authError
-      } else userId = authData.user?.id
+        } else {
+          throw authError
+        }
+      } else {
+        userId = authData.user?.id
+      }
+      
       if (!userId) throw new Error('Gagal membuat akun pengguna.')
 
       let avatarUrl = ''
       if (avatarFile) {
-        const avatarPath = userId + '/selfie-' + Date.now() + '.jpg'
+        const avatarPath = `${userId}/selfie-${Date.now()}.jpg`
         const { error: avatarError } = await supabase.storage.from('avatars').upload(avatarPath, avatarFile, { contentType: 'image/jpeg' })
         if (avatarError) throw new Error('Gagal mengunggah foto selfie: ' + avatarError.message)
         avatarUrl = supabase.storage.from('avatars').getPublicUrl(avatarPath).data.publicUrl
@@ -190,28 +196,38 @@ export default function RegisterPage() {
 
       let ktpUrl = ''
       if (ktpFile) {
-        const ktpPath = userId + '/ktp-' + Date.now() + '.jpg'
+        const ktpPath = `${userId}/ktp-${Date.now()}.jpg`
         const { error: ktpError } = await supabase.storage.from('identity_docs').upload(ktpPath, ktpFile, { contentType: 'image/jpeg' })
         if (ktpError) throw new Error('Gagal mengunggah foto KTP: ' + ktpError.message)
         ktpUrl = ktpPath
       }
 
       const { error: profileError } = await supabase.from('profiles').upsert({
-        id: userId, full_name: formData.fullName, phone_number: formData.phone,
-        home_address: formData.address, avatar_url: avatarUrl, ktp_url: ktpUrl,
-        verification_status: 'pending', role: 'user',
+        id: userId, 
+        full_name: formData.fullName, 
+        phone_number: formData.phone,
+        home_address: formData.address, 
+        avatar_url: avatarUrl, 
+        ktp_url: ktpUrl,
+        verification_status: 'pending', 
+        role: 'user'
       })
+      
       if (profileError) throw profileError
 
       alert('Pendaftaran berhasil! Silakan tunggu verifikasi dari admin Mai-Milu.')
       router.push('/verification')
+      
     } catch (error) {
-      alert('Ups, terjadi kesalahan: ' + error.message)
+      // 4. PERBAIKAN: Penanganan tipe error yang aman
+      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan tidak dikenal'
+      alert('Ups, terjadi kesalahan: ' + errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
+  // ... (Sisa kode UI di bawahnya tetap sama persis dan aman)
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-10">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
