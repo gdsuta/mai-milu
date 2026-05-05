@@ -90,7 +90,15 @@ export default async function MyRidesPage() {
       <div className="min-h-screen bg-gray-100 pb-12 pt-6">
         <main className="max-w-3xl mx-auto p-4 mt-2">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">🚗 Tumpangan Saya</h1>
+            <div className="flex items-center gap-3">
+              <a
+                href="/home"
+                className="text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium shadow-sm transition flex items-center gap-1"
+              >
+                ← Beranda
+              </a>
+              <h1 className="text-2xl font-bold text-gray-800">🚗 Tumpangan Saya</h1>
+            </div>
             <a
               href="/offer-ride"
               className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-green-700 transition text-sm flex items-center gap-1"
