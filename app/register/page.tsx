@@ -72,7 +72,7 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
   const subtext = colorScheme === 'blue' ? 'text-blue-600' : 'text-red-600'
   const camBtn  = colorScheme === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'
 
-  const processFile = async (raw) => {
+  const processFile = async (raw: File | undefined) => {
     if (!raw) return
     setOriginalSize(raw.size)
     setCompressing(true)
@@ -84,7 +84,7 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
       reader.onload = ev => setPreview(ev.target?.result)
       reader.readAsDataURL(compressed)
       onFileReady(compressed)
-    } catch (err) {
+    } catch (err: any) {
       alert('Gagal memproses gambar: ' + err.message)
       onFileReady(null)
     } finally {
@@ -164,7 +164,7 @@ export default function RegisterPage() {
   const [ktpFile, setKtpFile] = useState(null)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!agreedToTerms) { alert('Ups! Anda harus menyetujui Syarat & Ketentuan serta Kebijakan Privasi Mai-Milu sebelum mendaftar.'); return }
     setLoading(true)
