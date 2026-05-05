@@ -63,6 +63,10 @@ export default function Navbar({ userName, avatarUrl, showAdminLink = false, sho
             </Link>
           )}
 
+          <Link href="/my-rides" className="text-sm text-blue-100 hover:text-white font-medium hidden sm:inline-block">
+            🚗 Tumpangan Saya
+          </Link>
+
           {showAdminLink && (
             <Link href="/admin" className="text-sm text-blue-100 hover:text-white underline font-medium">
               Admin
