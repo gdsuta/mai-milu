@@ -81,7 +81,7 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
       const compressed = await compressImage(raw, maxWidth, quality)
       setCompressedSize(compressed.size)
       const reader = new FileReader()
-      reader.onload = ev => setPreview(ev.target?.result)
+      reader.onload = ev => setPreview(ev.target?.result as string ?? null)
       reader.readAsDataURL(compressed)
       onFileReady(compressed)
     } catch (err: any) {
