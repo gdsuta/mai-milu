@@ -58,10 +58,10 @@ type ImageUploadFieldProps = {
 }
 
 function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture, required, onFileReady }: ImageUploadFieldProps) {
-  const [preview, setPreview] = useState(null)
-  const [originalSize, setOriginalSize] = useState(null)
-  const [compressedSize, setCompressedSize] = useState(null)
-  const [compressing, setCompressing] = useState(false)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [originalSize, setOriginalSize] = useState<number | null>(null)
+  const [compressedSize, setCompressedSize] = useState<number | null>(null)
+  const [compressing, setCompressing] = useState<boolean>(false)
 
   // Two hidden inputs: one opens the camera, one opens the gallery
   const cameraInputRef = useRef(null)
@@ -160,8 +160,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({ email: '', password: '', fullName: '', phone: '', address: '' })
-  const [avatarFile, setAvatarFile] = useState(null)
-  const [ktpFile, setKtpFile] = useState(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [ktpFile, setKtpFile] = useState<File | null>(null)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const handleRegister = async (e: React.FormEvent) => {
