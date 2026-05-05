@@ -12,7 +12,7 @@ import Image from 'next/image'
 // selfie → max 800px,  JPEG 0.82 → ~150–250 KB
 // KTP    → max 1400px, JPEG 0.88 → ~300–500 KB (legible for admin)
 // ─────────────────────────────────────────────
-async function compressImage(file, maxWidth, quality) {
+async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
   return new Promise((resolve, reject) => {
     const img = document.createElement('img')
     const url = URL.createObjectURL(file)
@@ -40,13 +40,24 @@ async function compressImage(file, maxWidth, quality) {
   })
 }
 
-function formatBytes(bytes) {
+function formatBytes(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
-function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture, required, onFileReady }) {
+type ImageUploadFieldProps = {
+  label: string
+  hint: string
+  colorScheme: 'blue' | 'red'
+  maxWidth: number
+  quality: number
+  capture: string
+  required?: boolean
+  onFileReady: (file: File | null) => void
+}
+
+function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture, required, onFileReady }: ImageUploadFieldProps) {
   const [preview, setPreview] = useState(null)
   const [originalSize, setOriginalSize] = useState(null)
   const [compressedSize, setCompressedSize] = useState(null)
