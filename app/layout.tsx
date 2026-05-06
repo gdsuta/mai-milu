@@ -14,7 +14,28 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Mai-Milu | Bali Carpool Community',
-  description: 'A smart carpooling platform connecting drivers and passengers in Bali.',
+  description: 'Platform carpooling untuk menghubungkan pengemudi dan penumpang di Bali.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Mai-Milu',
+  },
+  formatDetection: { telephone: false },
+  icons: {
+    icon: [
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192x192.png',  sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'msapplication-TileColor': '#1d4ed8',
+    'msapplication-TileImage': '/icon-144x144.png',
+  },
 }
 
 export default function RootLayout({
@@ -24,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

@@ -1,0 +1,32 @@
+{
+  "name": "Mai-Milu | Bali Carpool Community",
+  "short_name": "Mai-Milu",
+  "description": "Platform carpooling untuk menghubungkan pengemudi dan penumpang di Bali.",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#1d4ed8",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait-primary",
+  "lang": "id",
+  "scope": "/",
+  "icons": [
+    { "src": "/icon-72x72.png",   "sizes": "72x72",   "type": "image/png" },
+    { "src": "/icon-96x96.png",   "sizes": "96x96",   "type": "image/png" },
+    { "src": "/icon-128x128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/icon-144x144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "/icon-152x152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-384x384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mai-Milu home screen"
+    }
+  ],
+  "categories": ["travel", "transportation", "lifestyle"]
+}
