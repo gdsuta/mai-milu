@@ -47,10 +47,71 @@ type RatingModal = {
 type Props = {
   rides: Ride[]
   currentUserId: string
+  userAddress: string
   deleteRide: (formData: FormData) => Promise<void>
 }
 
-export default function RideList({ rides, currentUserId, deleteRide }: Props) {
+// ─────────────────────────────────────────────
+// RIDE MATCHING ALGORITHM
+// Scores each ride 0-100 against the user home address + time.
+// ─────────────────────────────────────────────
+type MatchResult = { score: number; reasons: string[] }
+
+function tokenize(text: string): Set<string> {
+  return new Set(
+    text.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 2)
+  )
+}
+
+function routeScore(ride: Ride, userAddress: string): number {
+  if (!userAddress) return 0
+  const addrTokens = tokenize(userAddress)
+  const origTokens = tokenize(ride.origin)
+  const destTokens = tokenize(ride.destination)
+  let originHits = 0, destHits = 0
+  for (const t of addrTokens) {
+    if (origTokens.has(t)) originHits++
+    if (destTokens.has(t)) destHits++
+  }
+  return Math.min(100, originHits * 25 + destHits * 10)
+}
+
+function timeScore(departureTime: string): number {
+  const hoursAway = (new Date(departureTime).getTime() - Date.now()) / 3600000
+  if (hoursAway < 0)   return 0
+  if (hoursAway <= 2)  return 40
+  if (hoursAway <= 6)  return 30
+  if (hoursAway <= 24) return 20
+  if (hoursAway <= 72) return 10
+  return 5
+}
+
+function scoreRide(ride: Ride, userAddress: string): MatchResult {
+  const reasons: string[] = []
+  let score = 0
+
+  const rs = routeScore(ride, userAddress)
+  if (rs >= 25) { reasons.push('Dekat lokasimu'); score += rs }
+  else { score += rs }
+
+  const ts = timeScore(ride.departure_time)
+  score += ts
+  const h = (new Date(ride.departure_time).getTime() - Date.now()) / 3600000
+  if (h <= 2)  reasons.push('Segera berangkat')
+  else if (h <= 6) reasons.push('Hari ini')
+
+  if (ride.price === 0)        { reasons.push('Gratis'); score += 10 }
+  else if (ride.price <= 10000) score += 5
+  if (ride.available_seats >= 2) score += 5
+  if (ride.is_recurring)       { reasons.push('Rutin'); score += 8 }
+
+  return { score, reasons }
+}
+
+export default function RideList({ rides, currentUserId, userAddress, deleteRide }: Props) {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -61,6 +122,16 @@ export default function RideList({ rides, currentUserId, deleteRide }: Props) {
   const [freeOnly, setFreeOnly] = useState(false)
 
   const [driverRatings, setDriverRatings] = useState<Record<string, DriverRating>>({})
+
+  // Top 3 matched rides for this user (excludes own rides, min score > 5)
+  const matchedRides = useMemo(() => {
+    return rides
+      .filter(r => r.driver_id !== currentUserId)
+      .map(r => ({ ride: r, ...scoreRide(r, userAddress) }))
+      .filter(r => r.score > 5)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+  }, [rides, currentUserId, userAddress])
   const [myRatings, setMyRatings] = useState<Record<string, MyRating>>({})
   const [ratingModal, setRatingModal] = useState<RatingModal | null>(null)
 
@@ -150,6 +221,97 @@ export default function RideList({ rides, currentUserId, deleteRide }: Props) {
 
   return (
     <>
+      {/* ── Matched Rides Section ── */}
+      {matchedRides.length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🎯</span>
+            <h3 className="font-bold text-gray-800">Cocok untuk Anda</h3>
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              Berdasarkan lokasi & waktu
+            </span>
+          </div>
+          <div className="space-y-2">
+            {matchedRides.map(({ ride, score, reasons }) => {
+              const dateObj = new Date(ride.departure_time)
+              const jam = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+              const tanggal = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })
+              let waNumber = ride.profiles?.phone_number.replace(/[^0-9]/g, '') ?? ''
+              if (waNumber.startsWith('0')) waNumber = '62' + waNumber.substring(1)
+              const driverRating = driverRatings[ride.driver_id] ?? null
+
+              return (
+                <div key={ride.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-3">
+                  {/* Driver + score */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {ride.profiles?.avatar_url
+                        ? <img src={ride.profiles.avatar_url} className="w-9 h-9 rounded-full object-cover border border-blue-200" alt="Driver" />
+                        : <div className="w-9 h-9 bg-blue-200 rounded-full flex items-center justify-center text-sm">👤</div>
+                      }
+                      <div>
+                        <p className="font-bold text-gray-800 text-sm">{ride.profiles?.full_name}</p>
+                        {driverRating && (
+                          <StarDisplay avgScore={driverRating.avg_score} totalRatings={driverRating.total_ratings} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-blue-700">
+                        {ride.price === 0 ? 'GRATIS' : `Rp ${ride.price.toLocaleString('id-ID')}`}
+                      </p>
+                      <p className="text-xs text-gray-500">{ride.available_seats} kursi</p>
+                    </div>
+                  </div>
+
+                  {/* Route + time */}
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <span className="text-blue-400">📍</span>
+                    <span className="font-semibold">{ride.origin}</span>
+                    <span className="text-gray-400">→</span>
+                    <span className="font-semibold">{ride.destination}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span>📅 {tanggal}</span>
+                    <span>⏰ {jam} WITA</span>
+                    {ride.is_recurring && <span className="text-purple-600 font-semibold">🔁 Rutin</span>}
+                  </div>
+
+                  {/* Match reason tags */}
+                  {reasons.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {reasons.map((r, i) => (
+                        <span key={i} className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
+                          {r}
+                        </span>
+                      ))}
+                      <span className="text-xs bg-white text-blue-400 border border-blue-200 font-semibold px-2 py-0.5 rounded-full ml-auto">
+                        Skor {score}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* WhatsApp CTA */}
+                  <a
+                    href={`https://wa.me/${waNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 rounded-lg text-center transition flex items-center justify-center gap-2"
+                  >
+                    💬 Hubungi via WhatsApp
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex items-center gap-2 mt-4 mb-1">
+            <hr className="flex-1 border-gray-200" />
+            <span className="text-xs text-gray-400 whitespace-nowrap">Semua Tumpangan</span>
+            <hr className="flex-1 border-gray-200" />
+          </div>
+        </div>
+      )}
+
       {/* Search & Filter Bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 space-y-3">
         <div className="relative">

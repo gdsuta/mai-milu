@@ -29,7 +29,7 @@ export default async function HomePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('verification_status, full_name, avatar_url, role')
+    .select('verification_status, full_name, avatar_url, role, home_address')
     .eq('id', user.id)
     .single()
 
@@ -44,7 +44,7 @@ export default async function HomePage() {
   const { data: rides } = await supabase
     .from('rides')
     .select(`
-      id, driver_id, origin, destination, departure_time, available_seats, price, notes, status,
+      id, driver_id, origin, destination, departure_time, available_seats, price, notes, status, is_recurring, recurring_days,
       profiles:driver_id (full_name, avatar_url, phone_number)
     `)
     .eq('status', 'tersedia')
@@ -98,6 +98,7 @@ export default async function HomePage() {
           <RideList
             rides={(rides as any) ?? []}
             currentUserId={user.id}
+            userAddress={profile?.home_address ?? ''}
             deleteRide={deleteRide}
           />
 
