@@ -15,6 +15,8 @@ type Ride = {
   price: number
   notes: string | null
   status: string
+  is_recurring: boolean
+  recurring_days: string[] | null
   profiles: {
     full_name: string
     avatar_url: string | null
@@ -251,6 +253,11 @@ export default function RideList({ rides, currentUserId, deleteRide }: Props) {
                     <div>
                       <p className="font-bold text-gray-800">{ride.profiles?.full_name}</p>
                       <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">Pengemudi Terverifikasi</p>
+                      {ride.is_recurring && (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-block mt-1 ml-1">
+                          🔁 Rutin
+                        </span>
+                      )}
                       <div className="mt-1">
                         <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0} />
                       </div>

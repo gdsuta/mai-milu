@@ -12,6 +12,8 @@ type Ride = {
   notes: string | null
   status: string
   created_at: string
+  is_recurring: boolean
+  recurring_days: string[] | null
 }
 
 type Props = {
@@ -128,10 +130,17 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
                     )}
                   </div>
 
-                  {/* Status badge */}
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${STATUS_BADGE[ride.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                    {TAB_CONFIG[ride.status as Tab]?.emoji} {TAB_CONFIG[ride.status as Tab]?.label ?? ride.status}
-                  </span>
+                  {/* Status badge + recurring badge */}
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${STATUS_BADGE[ride.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                      {TAB_CONFIG[ride.status as Tab]?.emoji} {TAB_CONFIG[ride.status as Tab]?.label ?? ride.status}
+                    </span>
+                    {ride.is_recurring && (
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-purple-100 text-purple-700 whitespace-nowrap">
+                        🔁 {ride.recurring_days?.join(' · ') ?? 'Rutin'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Action buttons — only for active rides */}
