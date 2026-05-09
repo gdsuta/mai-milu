@@ -275,7 +275,6 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                       </p>
                       <p className="text-xs text-gray-500">{ride.available_seats} kursi</p>
                     </div>
-                  </div>
 
                   {/* Route + time */}
                   <div className="flex items-center gap-2 text-sm text-gray-700">
