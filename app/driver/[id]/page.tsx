@@ -1,8 +1,7 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { redirect, notFound } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import DriverProfile from '@/components/DriverProfile'
+import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk kita
 
 type Props = {
   params: Promise<{ id: string }>
@@ -10,29 +9,15 @@ type Props = {
 
 export default async function DriverProfilePage({ params }: Props) {
   const { id } = await params
-  const cookieStore = await cookies()
+  
+  // Menggunakan Rumus Induk yang ringkas
+  const supabase = await createServer()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set({ name, value, ...options })
-            })
-          } catch (error) {}
-        }
-      }
-    }
-  )
-
-  // Auth check — must be logged in to view profiles
+  // ── Pengecekan Auth ────────────────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // MENDAPATKAN DATA PROFIL PENGGUNA YANG SEDANG LOGIN (Untuk Navbar)
   const { data: currentProfile } = await supabase
     .from('profiles')
     .select('verification_status, full_name, avatar_url, role')
@@ -116,10 +101,10 @@ export default async function DriverProfilePage({ params }: Props) {
   return (
     <>
       <Navbar 
-		userName={profile?.full_name ?? undefined} 
-		avatarUrl={profile?.avatar_url ?? undefined} 
-		showAdminLink={profile?.role === 'admin'} 
-		/>
+        userName={currentProfile?.full_name ?? undefined} 
+        avatarUrl={currentProfile?.avatar_url ?? undefined} 
+        showAdminLink={currentProfile?.role === 'admin'} 
+      />
       <div className="min-h-screen bg-gray-100 pb-12 pt-6">
         <main className="max-w-2xl mx-auto p-4 mt-2">
           <DriverProfile
