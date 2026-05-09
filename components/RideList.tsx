@@ -156,32 +156,42 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
         .select('driver_id, avg_score, total_ratings')
         .in('driver_id', driverIds)
 
-      if (drData) {
-        const map: Record<string, DriverRating> = {}
-        drData.forEach((r) => {
-          if (r.driver_id) {
-            map[r.driver_id] = r
-          }
-        })
-        setDriverRatings(map)
-      }
+        if (drData) {
+            const map: Record<string, DriverRating> = {}
+            drData.forEach((r) => {
+                if (r.driver_id) {
+                    // RAKIT ULANG: Beri nilai fallback 0 jika dari database null
+                    map[r.driver_id] = {
+                        driver_id: r.driver_id,
+                        avg_score: r.avg_score ?? 0,
+                        total_ratings: r.total_ratings ?? 0,
+                    }
+                }
+            })
+            setDriverRatings(map)
+        }
 
-      const rideIds = rides.map((r) => r.id)
-      const { data: myData } = await supabase
-        .from('ratings')
-        .select('ride_id, score, comment')
-        .eq('passenger_id', currentUserId)
-        .in('ride_id', rideIds)
+        const rideIds = rides.map((r) => r.id)
+        const { data: myData } = await supabase
+            .from('ratings')
+            .select('ride_id, score, comment')
+            .eq('passenger_id', currentUserId)
+            .in('ride_id', rideIds)
 
-      if (myData) {
-        const map: Record<string, MyRating> = {}
-        myData.forEach((r) => {
-          if (r.ride_id) {
-            map[r.ride_id] = r
-          }
-        })
-        setMyRatings(map)
-      }
+        if (myData) {
+            const map: Record<string, MyRating> = {}
+            myData.forEach((r) => {
+                // Pastikan ride_id dan score ada sebelum dirakit
+                if (r.ride_id && r.score !== null) {
+                    map[r.ride_id] = {
+                        ride_id: r.ride_id,
+                        score: r.score,
+                        comment: r.comment ?? null,
+                    }
+                }
+            })
+            setMyRatings(map)
+        }
     }
 
     fetchRatings()
@@ -279,10 +289,10 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
               const driverRating = driverRatings[ride.driver_id] ?? null
 
               return (
-                <div key={ride.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-3">
+                <div key={ride.id} className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-3">
                   {/* Driver + score */}
                   <div className="flex items-center gap-3">
-                    <a href={`/driver/${ride.driver_id}`} className="flex-shrink-0 hover:opacity-80 transition">
+                    <a href={`/driver/${ride.driver_id}`} className="shrink-0 hover:opacity-80 transition">
                       {ride.profiles?.avatar_url ? (
                         <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border" />
                       ) : (
