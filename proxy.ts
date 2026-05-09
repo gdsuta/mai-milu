@@ -1,17 +1,15 @@
 import { type NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { updateSession } from '@/lib/supabase/proxy' 
+// Note: If you also renamed the helper file inside the lib/supabase folder to proxy.ts, 
+// change the import line above to: import { updateSession } from '@/lib/supabase/proxy'
 
-export async function middleware(request: NextRequest) {
-  // Operkan semua pemeriksaan ke fungsi pelindung yang kita buat di Langkah 1
+// 1. Rename the function from 'middleware' to 'proxy'
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
 
 export const config = {
   matcher: [
-    /*
-     * Cocokkan semua rute halaman, KECUALI file statis dan gambar
-     * agar Middleware tidak membuang energi mengecek hal-hal yang tidak perlu.
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
