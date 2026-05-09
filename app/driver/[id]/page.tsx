@@ -111,7 +111,8 @@ export default async function DriverProfilePage({ params }: Props) {
             driver={{
               ...driver,
               full_name: driver.full_name ?? "Pengemudi Tanpa Nama",
-              role: driver.role ?? "user"
+              role: driver.role ?? "user",
+              verification_status: driver.verification_status ?? "verified"
             }}
             avgScore={ratingData?.avg_score ?? null}
             totalRatings={ratingData?.total_ratings ?? 0}
