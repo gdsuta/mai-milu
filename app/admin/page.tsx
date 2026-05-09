@@ -1,31 +1,18 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
-import ZoomableImage from '@/components/ZoomableImage' // <-- Import komponen baru kita
+import ZoomableImage from '@/components/ZoomableImage'
+import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk kita
 
 export default async function AdminDashboard() {
-  const cookieStore = await cookies()
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-        }
-      }
-    }
-  )
+  const supabase = await createServer()
 
+  // Ambil user. Kita hapus redirect(!user) karena Middleware sudah menanganinya.
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const { data: profile } = await supabase.from('profiles').select('role, full_name, avatar_url').eq('id', user.id).single()
+  
+  // Perlindungan tingkat kedua: pastikan dia benar-benar admin
+  const { data: profile } = await supabase.from('profiles').select('role, full_name, avatar_url').eq('id', user!.id).single()
   if (profile?.role !== 'admin') redirect('/home')
 
   const { data: pendingUsers } = await supabase.from('profiles').select('*').eq('verification_status', 'pending')
@@ -44,10 +31,7 @@ export default async function AdminDashboard() {
 
   async function approveUser(formData: FormData) {
     'use server'
-    const cookieStore = await cookies()
-    const supabaseServer = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      cookies: { getAll() { return cookieStore.getAll() }, setAll(cookiesToSet) { try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {} } }
-    })
+    const supabaseServer = await createServer() // Sangat ringkas!
     const userId = formData.get('userId') as string
     const ktpPath = formData.get('ktpPath') as string
 
@@ -58,10 +42,7 @@ export default async function AdminDashboard() {
 
   async function revokeAccess(formData: FormData) {
     'use server'
-    const cookieStore = await cookies()
-    const supabaseServer = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      cookies: { getAll() { return cookieStore.getAll() }, setAll(cookiesToSet) { try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {} } }
-    })
+    const supabaseServer = await createServer() // Sangat ringkas!
     const userId = formData.get('userId') as string
     await supabaseServer.from('profiles').update({ verification_status: 'rejected' }).eq('id', userId)
     revalidatePath('/admin') 
@@ -95,26 +76,14 @@ export default async function AdminDashboard() {
                   <p className="text-sm text-gray-600">🏠 {u.home_address}</p>
                 </div>
                 
-                {/* INI YANG BERUBAH: Menggunakan ZoomableImage untuk Selfie */}
                 <div className="flex-none flex flex-col items-center">
                   <p className="font-semibold text-xs mb-1 text-gray-600">Selfie</p>
-                  <ZoomableImage 
-                    src={u.avatar_url} 
-                    alt={`Selfie ${u.full_name}`} 
-                    className="w-24 h-24 object-cover rounded-full border-2 border-blue-100"
-                    fallbackText="👤"
-                  />
+                  <ZoomableImage src={u.avatar_url} alt={`Selfie ${u.full_name}`} className="w-24 h-24 object-cover rounded-full border-2 border-blue-100" fallbackText="👤" />
                 </div>
 
-                {/* INI YANG BERUBAH: Menggunakan ZoomableImage untuk KTP */}
                 <div className="flex-none flex flex-col items-center">
                   <p className="font-semibold text-xs mb-1 text-red-600">KTP</p>
-                  <ZoomableImage 
-                    src={u.signedKtpUrl} 
-                    alt={`KTP ${u.full_name}`} 
-                    className="w-36 h-24 object-cover rounded border border-gray-300"
-                    fallbackText="🪪"
-                  />
+                  <ZoomableImage src={u.signedKtpUrl} alt={`KTP ${u.full_name}`} className="w-36 h-24 object-cover rounded border border-gray-300" fallbackText="🪪" />
                 </div>
 
                 <div className="flex-none">
@@ -130,7 +99,6 @@ export default async function AdminDashboard() {
         )}
 
         {/* BAGIAN 2: Pengguna Aktif (Terverifikasi) */}
-        {/* ... (Kode tabel pengguna aktif tetap sama persis seperti sebelumnya) ... */}
         <h2 className="text-xl font-bold text-gray-700 mb-4">Pengguna Aktif (Terverifikasi)</h2>
         {(!verifiedUsers || verifiedUsers.length === 0) ? (
           <div className="bg-white p-6 rounded-lg shadow-sm text-center">

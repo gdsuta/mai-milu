@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import StarRatingModal from './StarRatingModal'
 import StarDisplay from './StarDisplay'
 
@@ -112,10 +112,7 @@ function scoreRide(ride: Ride, userAddress: string): MatchResult {
 }
 
 export default function RideList({ rides, currentUserId, userAddress, deleteRide }: Props) {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
 
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<'time' | 'price_asc' | 'price_desc'>('time')

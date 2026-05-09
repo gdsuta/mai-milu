@@ -1,59 +1,34 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Navbar from '@/components/Navbar'
 import MyRidesList from '@/components/MyRidesList'
+import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk server kita
 
 export default async function MyRidesPage() {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-        }
-      }
-    }
-  )
+  const supabase = await createServer() // Sangat ringkas!
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  // Pengecekan !user dihapus karena Middleware sudah menendang pengguna yang belum login
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('verification_status, full_name, avatar_url, role')
-    .eq('id', user.id)
+    .eq('id', user!.id)
     .single()
 
+  // Middleware tidak mengecek status verifikasi (hanya mengecek login), jadi ini tetap dipertahankan
   if (profile?.verification_status !== 'verified') redirect('/verification')
 
   // Fetch ALL of the driver's rides (all statuses, all times)
   const { data: rides } = await supabase
     .from('rides')
     .select('id, origin, destination, departure_time, available_seats, price, notes, status, created_at')
-    .eq('driver_id', user.id)
+    .eq('driver_id', user!.id)
     .order('departure_time', { ascending: false })
 
   async function updateRideStatus(formData: FormData) {
     'use server'
-    const cookieStore = await cookies()
-    const supabaseServer = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) {
-            try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-          }
-        }
-      }
-    )
+    const supabaseServer = await createServer() // Sangat ringkas!
     const rideId = formData.get('rideId') as string
     const newStatus = formData.get('status') as string
     await supabaseServer.from('rides').update({ status: newStatus }).eq('id', rideId)
@@ -62,19 +37,7 @@ export default async function MyRidesPage() {
 
   async function deleteRide(formData: FormData) {
     'use server'
-    const cookieStore = await cookies()
-    const supabaseServer = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) {
-            try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-          }
-        }
-      }
-    )
+    const supabaseServer = await createServer() // Sangat ringkas!
     const rideId = formData.get('rideId') as string
     await supabaseServer.from('rides').delete().eq('id', rideId)
     revalidatePath('/my-rides')

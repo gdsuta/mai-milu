@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk kita
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -8,19 +7,7 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/verification'
 
   if (code) {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) {
-            try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-          }
-        }
-      }
-    )
+    const supabase = await createServer() // Sangat ringkas!
     
     // Proses penukaran tiket (code) menjadi Sesi Login
     const { error } = await supabase.auth.exchangeCodeForSession(code)

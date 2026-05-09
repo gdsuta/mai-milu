@@ -1,44 +1,27 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import RideList from '@/components/RideList'
+import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk kita
 
 export default async function HomePage() {
-  const cookieStore = await cookies()
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-        }
-      }
-    }
-  )
+  const supabase = await createServer()
 
+  // Ambil user. Kita hapus redirect(!user) karena Middleware sudah menanganinya.
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
-  }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('verification_status, full_name, avatar_url, role, home_address')
-    .eq('id', user.id)
+    .eq('id', user!.id)
     .single()
 
+  // Middleware tidak mengecek status verifikasi, jadi pengecekan ini tetap dipertahankan
   if (profile?.verification_status !== 'verified') {
     redirect('/verification')
   }
 
-  // Fetch all future available rides once on the server.
-  // RideList handles search/filter/sort on the client with no extra round-trips.
   const now = new Date().toISOString()
 
   const { data: rides } = await supabase
@@ -53,19 +36,7 @@ export default async function HomePage() {
 
   async function deleteRide(formData: FormData) {
     'use server'
-    const cookieStore = await cookies()
-    const supabaseServer = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) {
-            try { cookiesToSet.forEach(({ name, value, options }) => { cookieStore.set({ name, value, ...options }) }) } catch (error) {}
-          }
-        }
-      }
-    )
+    const supabaseServer = await createServer() // Sangat ringkas!
     const rideId = formData.get('rideId') as string
     await supabaseServer.from('rides').delete().eq('id', rideId)
     revalidatePath('/home')
@@ -97,7 +68,7 @@ export default async function HomePage() {
 
           <RideList
             rides={(rides as any) ?? []}
-            currentUserId={user.id}
+            currentUserId={user!.id}
             userAddress={profile?.home_address ?? ''}
             deleteRide={deleteRide}
           />
