@@ -89,7 +89,7 @@ export default async function AdminDashboard() {
                 <div className="flex-none">
                   <form action={approveUser}>
                     <input type="hidden" name="userId" value={u.id} />
-                    <input type="hidden" name="ktpPath" value={u.ktp_url} />
+                    <input type="hidden" name="ktpPath" value={u.ktp_url ?? ""} />
                     <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 shadow-md">✅ Setujui</button>
                   </form>
                 </div>
