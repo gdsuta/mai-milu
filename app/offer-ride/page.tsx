@@ -172,7 +172,7 @@ export default function OfferRidePage() {
       } else {
         // ── Recurring rides ──────────────────────────────────────
         // Build array of all ride objects to batch insert
-        const ridesPayload: object[] = []
+        const ridesPayload: any[] = []
 
         for (const dayId of selectedDays) {
           const dayConfig = DAYS.find(d => d.id === dayId)!
