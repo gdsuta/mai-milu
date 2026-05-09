@@ -1,14 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { Database } from '@/types/supabase' // <-- 1. Impor kamusnya
 
 export async function updateSession(request: NextRequest) {
-  // 1. Buat respons awal
   let supabaseResponse = NextResponse.next({
     request,
   })
 
-  // 2. Inisialisasi Supabase khusus untuk Middleware (Edge)
-  const supabase = createServerClient(
+  // 2. Sisipkan <Database> di sini
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
