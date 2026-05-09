@@ -1,14 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export default function UpdatePasswordPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
   const router = useRouter()
   
   const [password, setPassword] = useState('')

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -152,10 +152,7 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
 
 export default function RegisterPage() {
   // 3. PERBAIKAN: Menambahkan non-null assertion (!) agar TypeScript tidak komplain
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)

@@ -243,19 +243,32 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
               return (
                 <div key={ride.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-3">
                   {/* Driver + score */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {ride.profiles?.avatar_url
-                        ? <img src={ride.profiles.avatar_url} className="w-9 h-9 rounded-full object-cover border border-blue-200" alt="Driver" />
-                        : <div className="w-9 h-9 bg-blue-200 rounded-full flex items-center justify-center text-sm">👤</div>
-                      }
-                      <div>
-                        <p className="font-bold text-gray-800 text-sm">{ride.profiles?.full_name}</p>
-                        {driverRating && (
-                          <StarDisplay avgScore={driverRating.avg_score} totalRatings={driverRating.total_ratings} />
-                        )}
+                  <div className="flex items-center gap-3">
+                    <a href={`/driver/${ride.driver_id}`} className="flex-shrink-0 hover:opacity-80 transition">
+                      {ride.profiles?.avatar_url ? (
+                        <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border" />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl">👤</div>
+                      )}
+                    </a>
+                    <div>
+                      <a
+                        href={`/driver/${ride.driver_id}`}
+                        className="font-bold text-gray-800 hover:text-blue-600 transition"
+                      >
+                        {ride.profiles?.full_name}
+                      </a>
+                      <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">Pengemudi Terverifikasi</p>
+                      {ride.is_recurring && (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-block mt-1 ml-1">
+                          🔁 Rutin
+                        </span>
+                      )}
+                      <div className="mt-1">
+                        <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0} />
                       </div>
                     </div>
+                  </div>
                     <div className="text-right">
                       <p className="font-bold text-blue-700">
                         {ride.price === 0 ? 'GRATIS' : `Rp ${ride.price.toLocaleString('id-ID')}`}

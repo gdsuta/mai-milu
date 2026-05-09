@@ -1,16 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
   const router = useRouter()
   
   const [loading, setLoading] = useState(false)
