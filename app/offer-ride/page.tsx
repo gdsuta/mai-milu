@@ -72,7 +72,7 @@ export default function OfferRidePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('id, full_name, avatar_url, role').eq('id', user.id).single()
-        if (profile) setUserProfile({ id: profile.id, fullName: profile.full_name, avatarUrl: profile.avatar_url, role: profile.role })
+        if (profile) setUserProfile({id: profile.id, fullName: profile.full_name ?? "Pengguna Tanpa Nama",avatarUrl: profile.avatar_url,role: profile.role ?? "user"})
       }
     }
     getUserProfile()
