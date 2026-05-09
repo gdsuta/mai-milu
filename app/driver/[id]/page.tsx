@@ -108,7 +108,11 @@ export default async function DriverProfilePage({ params }: Props) {
       <div className="min-h-screen bg-gray-100 pb-12 pt-6">
         <main className="max-w-2xl mx-auto p-4 mt-2">
           <DriverProfile
-            driver={driver}
+            driver={{
+              ...driver,
+              full_name: driver.full_name ?? "Pengemudi Tanpa Nama",
+              role: driver.role ?? "user"
+            }}
             avgScore={ratingData?.avg_score ?? null}
             totalRatings={ratingData?.total_ratings ?? 0}
             distribution={distribution}
