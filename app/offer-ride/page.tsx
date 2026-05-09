@@ -221,7 +221,7 @@ export default function OfferRidePage() {
 
   return (
     <>
-      <Navbar userName={userProfile?.fullName} avatarUrl={userProfile?.avatarUrl} showAdminLink={userProfile?.role === 'admin'} />
+      <Navbar userName={profile?.full_name ?? undefined} avatarUrl={profile?.avatar_url ?? undefined} showAdminLink={profile?.role === 'admin'}/>
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-10 pt-10">
         <div className="max-w-xl w-full bg-white rounded-xl shadow-lg p-8">
 

@@ -45,11 +45,11 @@ export default async function MyRidesPage() {
 
   return (
     <>
-      <Navbar
-        userName={profile?.full_name}
-        avatarUrl={profile?.avatar_url}
-        showAdminLink={profile?.role === 'admin'}
-      />
+      <Navbar 
+		userName={profile?.full_name ?? undefined} 
+		avatarUrl={profile?.avatar_url ?? undefined} 
+		showAdminLink={profile?.role === 'admin'} 
+		/>
       <div className="min-h-screen bg-gray-100 pb-12 pt-6">
         <main className="max-w-3xl mx-auto p-4 mt-2">
           <div className="flex items-center justify-between mb-6">

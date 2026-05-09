@@ -115,11 +115,11 @@ export default async function DriverProfilePage({ params }: Props) {
 
   return (
     <>
-      <Navbar
-        userName={currentProfile?.full_name}
-        avatarUrl={currentProfile?.avatar_url}
-        showAdminLink={currentProfile?.role === 'admin'}
-      />
+      <Navbar 
+		userName={profile?.full_name ?? undefined} 
+		avatarUrl={profile?.avatar_url ?? undefined} 
+		showAdminLink={profile?.role === 'admin'} 
+		/>
       <div className="min-h-screen bg-gray-100 pb-12 pt-6">
         <main className="max-w-2xl mx-auto p-4 mt-2">
           <DriverProfile

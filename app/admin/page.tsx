@@ -50,7 +50,7 @@ export default async function AdminDashboard() {
 
   return (
     <>
-      <Navbar userName={profile?.full_name} avatarUrl={profile?.avatar_url} />
+      <Navbar userName={profile?.full_name ?? undefined} avatarUrl={profile?.avatar_url ?? undefined} />
       <div className="min-h-screen bg-gray-100 p-8 pt-12">
         
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
