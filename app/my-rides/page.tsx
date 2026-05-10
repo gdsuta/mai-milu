@@ -17,7 +17,7 @@ export default async function MyRidesPage() {
 
   if (profile?.verification_status !== 'verified') redirect('/verification')
 
-  // PERBAIKAN: Mengambil daftar tumpangan SEKALIGUS data penumpang yang memesan
+  // Mengambil daftar tumpangan SEKALIGUS data penumpang yang memesan
   const { data: rides } = await supabase
     .from('rides')
     .select(`
@@ -47,7 +47,7 @@ export default async function MyRidesPage() {
     revalidatePath('/my-rides')
   }
 
-  // FUNGSI BARU: Merespon pesanan yang masuk
+  // FUNGSI BARU: Merespon pesanan yang masuk (Approve / Reject)
   async function respondToBooking(formData: FormData) {
     'use server'
     const supabaseServer = await createServer()
@@ -95,6 +95,7 @@ export default async function MyRidesPage() {
             rides={(rides as any) ?? []}
             updateRideStatus={updateRideStatus}
             deleteRide={deleteRide}
+            respondToBooking={respondToBooking} /* PERBAIKAN: Fungsi ini sekarang diteruskan! */
           />
         </main>
       </div>
