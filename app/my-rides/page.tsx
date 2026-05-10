@@ -17,20 +17,20 @@ export default async function MyRidesPage() {
 
   if (profile?.verification_status !== 'verified') redirect('/verification')
 
-  // 1. PERBAIKAN: Menggunakan 'profiles' agar Supabase mengenali relasi tabelnya
+  // PERBAIKAN: Mengembalikan sintaks relasi ke 'passenger:passenger_id' sesuai skema asli Anda
   const { data: rides, error } = await supabase
     .from('rides')
     .select(`
       id, origin, destination, departure_time, available_seats, price, notes, status, created_at, is_recurring, recurring_days,
       bookings (
         id, passenger_id, status, created_at,
-        profiles ( full_name, avatar_url, phone_number )
+        passenger:passenger_id ( full_name, avatar_url, phone_number )
       )
     `)
     .eq('driver_id', user!.id)
     .order('departure_time', { ascending: false })
 
-  // 2. PERBAIKAN: Mencegah error tertelan secara diam-diam (Silent Failure)
+  // Mencegah error tertelan secara diam-diam
   if (error) {
     console.error("Supabase Query Error:", error.message)
   }
@@ -63,6 +63,7 @@ export default async function MyRidesPage() {
       await supabaseServer.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
     } else if (action === 'reject') {
       await supabaseServer.from('bookings').update({ status: 'rejected' }).eq('id', bookingId)
+      // Jika ditolak, kembalikan 1 kursi ke tabel rides
       const { data: ride } = await supabaseServer.from('rides').select('available_seats').eq('id', rideId).single()
       if (ride) {
         await supabaseServer.from('rides').update({ available_seats: ride.available_seats + 1 }).eq('id', rideId)
