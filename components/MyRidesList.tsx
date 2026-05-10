@@ -99,7 +99,7 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide, respo
             const isActive = ride.status === 'tersedia'
 
             // Ambil daftar booking yang aktif (belum dibatalkan / belum ditolak)
-            const activeBookings = ride.bookings?.filter(b => b.status === 'pending' || b.status === 'approved') || []
+            const activeBookings = ride.bookings?.filter(b => b.status === 'pending' || b.status === 'accepted') || []
             const pendingCount = activeBookings.filter(b => b.status === 'pending').length
 
             return (
@@ -169,11 +169,11 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide, respo
                               <div>
                                 <p className="font-bold text-gray-800 text-sm leading-tight">{passenger?.full_name || 'Pengguna'}</p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${booking.status === 'approved' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
-                                    {booking.status === 'approved' ? 'Disetujui' : 'Menunggu'}
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${booking.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
+                                    {booking.status === 'accepted' ? 'Disetujui' : 'Menunggu'}
                                   </span>
                                   {waNumber && (
-                                    <a href={`https://wa.me/${waNumber}?text=Halo, saya pengemudi Mai-Milu. ${booking.status === 'approved' ? 'Pesanan kursi Anda sudah saya setujui.' : 'Terkait pesanan kursi Anda, ...'}`} target="_blank" rel="noopener noreferrer" className="text-[#25D366] hover:text-[#20bd5a] flex items-center gap-1 text-[11px] font-bold transition-colors">
+                                    <a href={`https://wa.me/${waNumber}?text=Halo, saya pengemudi Mai-Milu. ${booking.status === 'accepted' ? 'Pesanan kursi Anda sudah saya setujui.' : 'Terkait pesanan kursi Anda, ...'}`} target="_blank" rel="noopener noreferrer" className="text-[#25D366] hover:text-[#20bd5a] flex items-center gap-1 text-[11px] font-bold transition-colors">
                                       <WhatsappLogo weight="fill" className="w-3.5 h-3.5" /> Hubungi
                                     </a>
                                   )}

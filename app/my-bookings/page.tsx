@@ -8,7 +8,7 @@ import { Ticket, CheckCircle, XCircle, MapPin, Flag, CalendarBlank, Clock, House
 
 const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; bg: string; text: string }> = {
   pending:   { label: 'Menunggu',    icon: <Ticket weight="duotone" className="w-4 h-4" />,      bg: 'bg-blue-100',   text: 'text-blue-700'  },
-  approved:  { label: 'Disetujui',   icon: <CheckCircle weight="fill" className="w-4 h-4" />,    bg: 'bg-green-100',  text: 'text-green-700' },
+  accepted:  { label: 'Disetujui',   icon: <CheckCircle weight="fill" className="w-4 h-4" />,    bg: 'bg-green-100',  text: 'text-green-700' },
   rejected:  { label: 'Ditolak',     icon: <XCircle weight="duotone" className="w-4 h-4" />,     bg: 'bg-gray-200',   text: 'text-gray-600'  },
   cancelled: { label: 'Dibatalkan',  icon: <XCircle weight="duotone" className="w-4 h-4" />,     bg: 'bg-red-100',    text: 'text-red-700'   },
 }
@@ -171,8 +171,8 @@ export default async function MyBookingsPage() {
                               </a>
                             )}
 
-                            {/* Hanya bisa dibatalkan jika masih pending/approved dan belum lewat waktu */}
-                            {(booking.status === 'pending' || booking.status === 'approved') && !isRidePast && (
+                            {/* Hanya bisa dibatalkan jika masih pending/accepted dan belum lewat waktu */}
+                            {(booking.status === 'pending' || booking.status === 'accepted') && !isRidePast && (
                               <form action={cancelBookingAction}>
                                 <input type="hidden" name="bookingId" value={booking.id} />
                                 <button type="submit" className="bg-red-50 text-red-600 border border-red-200 px-6 py-3 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors shadow-sm">

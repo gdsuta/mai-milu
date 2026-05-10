@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Ticket, CircleNotch, CheckCircle, XCircle, WhatsappLogo, Prohibit } from '@phosphor-icons/react'
 import { useRouter } from 'next/navigation'
 
-type BookingStatus = 'none' | 'pending' | 'approved' | 'cancelled' | 'rejected'
+type BookingStatus = 'none' | 'pending' | 'accepted' | 'cancelled' | 'rejected'
 
 type Props = {
   rideId: string
@@ -119,7 +119,7 @@ export default function BookingButton({
   }
 
   // Kondisi: Disetujui
-  if (bookingStatus === 'approved') {
+  if (bookingStatus === 'accepted') {
     return (
       <div className="flex gap-2 w-full mt-2 pt-2 border-t border-gray-100">
         <div className="flex-1 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 shadow-sm">
