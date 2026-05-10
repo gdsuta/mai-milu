@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import RideList from '@/components/RideList'
 import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk kita
-
+import { PlusCircle } from '@phosphor-icons/react/dist/ssr'
 export default async function HomePage() {
   const supabase = await createServer()
 
@@ -54,12 +54,9 @@ export default async function HomePage() {
         <main className="max-w-3xl mx-auto p-4 mt-2">
 
           <div className="mb-6">
-            <Link
-              href="/offer-ride"
-              className="w-full bg-green-600 text-white px-4 py-4 rounded-xl font-bold hover:bg-green-700 shadow-md transition flex items-center justify-center gap-2 text-lg"
-            >
-              <span className="text-xl">➕</span> Tawarkan Tumpangan
-            </Link>
+            <Link href="/offer-ride" className="w-full bg-linear-to-r from-indigo-600 to-blue-600 text-white font-bold p-4 rounded-xl mt-4 hover:shadow-lg hover:from-indigo-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 shadow-md">
+   <PlusCircle weight="bold" className="w-6 h-6" /> Tawarkan Tumpangan
+</Link>
           </div>
 
           <div className="flex justify-between items-center mb-4">
