@@ -1,78 +1,73 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+// Impor ikon dari Phosphor
+import { SignOut, ShieldCheck, User } from '@phosphor-icons/react'
 
-interface NavbarProps {
+type NavbarProps = {
   userName?: string
-  avatarUrl?: string | null
+  avatarUrl?: string
   showAdminLink?: boolean
-  showOfferRideButton?: boolean
 }
 
-export default function Navbar({ userName, avatarUrl, showAdminLink = false, showOfferRideButton = false }: NavbarProps) {
-  const supabase = createClient()
+export default function Navbar({ userName, avatarUrl, showAdminLink }: NavbarProps) {
   const router = useRouter()
+  const supabase = createClient()
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
-    router.refresh()
-  }
-
-  // Fungsi pintar untuk mengambil maksimal 2 kata pertama dari nama
-  const getGreetingName = (fullName: string) => {
-    return fullName.split(' ').slice(0, 2).join(' ')
   }
 
   return (
-    <nav className="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-10">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
-        {/* Logo dan Nama Aplikasi */}
-        <Link href="/home" className="flex items-center gap-2">
-            <div className="bg-white rounded-full p-0.5 shadow-sm">
-              <Image src="/logo.png" alt="Mai-Milu Logo" width={36} height={36} className="rounded-full" />
-            </div>
-            <div className="flex flex-col justify-center">
-              <span className="text-xl font-bold text-white leading-none tracking-wide">
-                Mai-Milu
-              </span>
-              <span className="text-[10px] sm:text-xs text-blue-100 font-medium mt-1 tracking-wider">
-                Bali Carpool Community
-              </span>
-            </div>
-          </Link>
+    <nav className="bg-blue-600 text-white shadow-md sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        
+        {/* Logo & Judul */}
+        <Link href="/home" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <div className="bg-white rounded-full p-0.5 shadow-sm border-2 border-blue-400/50 hidden sm:block">
+            <Image src="/logo.png" alt="Mai-Milu" width={36} height={36} className="rounded-full" />
+          </div>
+          <div className="flex flex-col">
+            <h1 className="font-black text-xl leading-none tracking-tight">Mai-Milu</h1>
+            <p className="text-[10px] text-blue-200 font-bold tracking-wider mt-0.5 uppercase hidden sm:block">Bali Carpool Community</p>
+          </div>
+        </Link>
 
-        {/* Info Pengguna, Tombol, dan Logout */}
-        <div className="flex items-center gap-4">
-          {userName && (
-            <span className="text-sm hidden md:inline-block font-medium">Halo, {getGreetingName(userName)}!</span>
-          )}
-          {avatarUrl && (
-            <Image src={avatarUrl} alt="Profile" width={40} height={40} className="rounded-full border-2 border-white object-cover shadow-sm" />
-          )}
-
-          {showOfferRideButton && (
-            <Link href="/offer-ride" className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 shadow-sm transition flex items-center gap-2">
-              <span className="text-lg font-bold">+</span> <span className="hidden md:inline">Tawarkan Tumpangan</span>
-            </Link>
-          )}
-
-          <Link href="/my-rides" className="text-sm text-blue-100 hover:text-white font-medium">
-            🚗 <span className="hidden sm:inline">Tumpangan Saya</span>
-          </Link>
-
+        {/* Profil & Aksi */}
+        <div className="flex items-center gap-4 sm:gap-6">
+          
+          {/* Tautan Admin (Jika Role = admin) */}
           {showAdminLink && (
-            <Link href="/admin" className="text-sm text-blue-100 hover:text-white underline font-medium">
-              Admin
+            <Link href="/admin" className="flex items-center gap-1.5 text-sm font-bold text-yellow-300 hover:text-yellow-100 transition-colors">
+              <ShieldCheck weight="duotone" className="w-5 h-5" /> 
+              <span className="hidden sm:inline">Admin</span>
             </Link>
           )}
+          
+          <div className="flex items-center gap-3">
+            {/* Avatar Pengguna */}
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={userName || "User"} className="w-9 h-9 rounded-full object-cover border-2 border-blue-400 shadow-sm" />
+            ) : (
+              <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center border-2 border-blue-400 shadow-sm">
+                <User weight="bold" className="w-5 h-5 text-white" />
+              </div>
+            )}
+            
+            {/* Tombol Keluar */}
+            <button 
+              onClick={handleLogout} 
+              className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-inner border border-blue-500"
+            >
+              <span className="hidden sm:inline">Keluar</span>
+              <SignOut weight="bold" className="w-4 h-4" />
+            </button>
+          </div>
 
-          <button onClick={handleLogout} className="text-sm bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded-lg font-medium transition shadow-sm">
-            Keluar
-          </button>
         </div>
       </div>
     </nav>
