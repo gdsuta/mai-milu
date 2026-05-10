@@ -3,12 +3,10 @@ import { revalidatePath } from 'next/cache'
 import Navbar from '@/components/Navbar'
 import MyRidesList from '@/components/MyRidesList'
 import { createServer } from '@/lib/supabase/server'
-// Impor ikon Phosphor khusus untuk Server Component
 import { House, CarProfile, PlusCircle } from '@phosphor-icons/react/dist/ssr'
 
 export default async function MyRidesPage() {
   const supabase = await createServer()
-
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: profile } = await supabase
@@ -19,9 +17,16 @@ export default async function MyRidesPage() {
 
   if (profile?.verification_status !== 'verified') redirect('/verification')
 
+  // PERBAIKAN: Mengambil daftar tumpangan SEKALIGUS data penumpang yang memesan
   const { data: rides } = await supabase
     .from('rides')
-    .select('id, origin, destination, departure_time, available_seats, price, notes, status, created_at, is_recurring, recurring_days')
+    .select(`
+      id, origin, destination, departure_time, available_seats, price, notes, status, created_at, is_recurring, recurring_days,
+      bookings (
+        id, passenger_id, status, created_at,
+        passenger:passenger_id ( full_name, avatar_url, phone_number )
+      )
+    `)
     .eq('driver_id', user!.id)
     .order('departure_time', { ascending: false })
 
@@ -42,23 +47,36 @@ export default async function MyRidesPage() {
     revalidatePath('/my-rides')
   }
 
+  // FUNGSI BARU: Merespon pesanan yang masuk
+  async function respondToBooking(formData: FormData) {
+    'use server'
+    const supabaseServer = await createServer()
+    const bookingId = formData.get('bookingId') as string
+    const rideId = formData.get('rideId') as string
+    const action = formData.get('action') as 'approve' | 'reject'
+
+    if (action === 'approve') {
+      await supabaseServer.from('bookings').update({ status: 'accepted' }).eq('id', bookingId)
+    } else if (action === 'reject') {
+      // Jika ditolak, ubah status dan KEMBALIKAN 1 KURSI ke tabel rides
+      await supabaseServer.from('bookings').update({ status: 'rejected' }).eq('id', bookingId)
+      const { data: ride } = await supabaseServer.from('rides').select('available_seats').eq('id', rideId).single()
+      if (ride) {
+        await supabaseServer.from('rides').update({ available_seats: ride.available_seats + 1 }).eq('id', rideId)
+      }
+    }
+    revalidatePath('/my-rides')
+  }
+
   return (
     <>
-      <Navbar 
-		userName={profile?.full_name ?? undefined} 
-		avatarUrl={profile?.avatar_url ?? undefined} 
-		showAdminLink={profile?.role === 'admin'} 
-		/>
+      <Navbar userName={profile?.full_name ?? undefined} avatarUrl={profile?.avatar_url ?? undefined} showAdminLink={profile?.role === 'admin'} />
       <div className="min-h-screen bg-gray-50 pb-12 pt-6">
         <main className="max-w-3xl mx-auto p-4 mt-2">
           
-          {/* PERBAIKAN: Header yang responsif di Mobile */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <a
-                href="/home"
-                className="text-gray-500 hover:text-indigo-600 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2 self-start sm:self-auto"
-              >
+              <a href="/home" className="text-gray-500 hover:text-indigo-600 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2 self-start sm:self-auto">
                 <House weight="duotone" className="w-5 h-5" /> Beranda
               </a>
               <h1 className="text-3xl font-black text-blue-900 tracking-tight flex items-center gap-2.5 mt-2 sm:mt-0">
@@ -68,10 +86,7 @@ export default async function MyRidesPage() {
                 Tumpangan Saya
               </h1>
             </div>
-            <a
-              href="/offer-ride"
-              className="bg-linear-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:from-indigo-700 hover:to-blue-700 transition-all text-sm flex items-center justify-center gap-2 shadow-md w-full sm:w-auto"
-            >
+            <a href="/offer-ride" className="bg-linear-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:from-indigo-700 hover:to-blue-700 transition-all text-sm flex items-center justify-center gap-2 shadow-md w-full sm:w-auto">
               <PlusCircle weight="bold" className="w-5 h-5" /> Tawarkan Baru
             </a>
           </div>

@@ -1,8 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-// Impor ikon Phosphor
-import { Target, CheckCircle, XCircle, Clock, MapPin, Flag, CalendarBlank, Users, Coins, ArrowsClockwise, Trash, CarProfile } from '@phosphor-icons/react'
+import { Target, CheckCircle, XCircle, Clock, MapPin, Flag, CalendarBlank, Users, Coins, ArrowsClockwise, Trash, Ticket, User, WhatsappLogo } from '@phosphor-icons/react'
+
+type Booking = {
+  id: string
+  passenger_id: string
+  status: string
+  created_at: string
+  passenger?: { full_name: string; avatar_url: string | null; phone_number: string } | null
+  profiles?: { full_name: string; avatar_url: string | null; phone_number: string } | null
+}
 
 type Ride = {
   id: string
@@ -16,12 +24,14 @@ type Ride = {
   created_at: string
   is_recurring: boolean
   recurring_days: string[] | null
+  bookings?: Booking[]
 }
 
 type Props = {
   rides: Ride[]
   updateRideStatus: (formData: FormData) => Promise<void>
   deleteRide: (formData: FormData) => Promise<void>
+  respondToBooking: (formData: FormData) => Promise<void>
 }
 
 type Tab = 'tersedia' | 'selesai' | 'dibatalkan' | 'kadaluarsa'
@@ -47,7 +57,7 @@ const STATUS_BADGE: Record<string, string> = {
   kadaluarsa: 'bg-gray-100 text-gray-500 border border-gray-200',
 }
 
-export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Props) {
+export default function MyRidesList({ rides, updateRideStatus, deleteRide, respondToBooking }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('tersedia')
   const [confirmAction, setConfirmAction] = useState<{
     rideId: string; action: 'selesai' | 'dibatalkan' | 'delete'; origin: string; destination: string
@@ -62,48 +72,25 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
 
   const filtered = rides.filter(r => r.status === activeTab)
 
-  const EMPTY_MESSAGES: Record<Tab, string> = {
-    tersedia:   'Belum ada tumpangan aktif. Klik "Tawarkan Baru" di atas untuk membuat jadwal.',
-    selesai:    'Belum ada tumpangan yang ditandai selesai.',
-    dibatalkan: 'Belum ada tumpangan yang dibatalkan.',
-    kadaluarsa: 'Tidak ada tumpangan yang sudah kadaluarsa.',
-  }
-
   return (
     <>
-      {/* ── Tab Bar ── */}
       <div className="flex gap-1 bg-white rounded-xl shadow-sm border border-gray-200 p-1.5 mb-6">
         {(Object.keys(TAB_CONFIG) as Tab[]).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 flex flex-col items-center py-2.5 px-1 rounded-lg text-xs font-bold transition-all ${
-              activeTab === tab
-                ? `bg-gray-50 shadow-sm ${TAB_CONFIG[tab].color}`
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50/50'
-            }`}
-          >
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 flex flex-col items-center py-2.5 px-1 rounded-lg text-xs font-bold transition-all ${activeTab === tab ? `bg-gray-50 shadow-sm ${TAB_CONFIG[tab].color}` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50/50'}`}>
             {getTabIcon(tab, "w-6 h-6 mb-1")}
             <span>{TAB_CONFIG[tab].label}</span>
-            {counts[tab] > 0 && (
-              <span className={`mt-0.5 text-[10px] font-black bg-white px-2 py-0.5 rounded-full border ${activeTab === tab ? 'border-current' : 'border-gray-200 text-gray-400'}`}>
-                {counts[tab]}
-              </span>
-            )}
+            {counts[tab] > 0 && <span className={`mt-0.5 text-[10px] font-black bg-white px-2 py-0.5 rounded-full border ${activeTab === tab ? 'border-current' : 'border-gray-200 text-gray-400'}`}>{counts[tab]}</span>}
           </button>
         ))}
       </div>
 
-      {/* ── Ride Cards ── */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center flex flex-col items-center">
-          <div className="bg-gray-50 p-4 rounded-full mb-4">
-            {getTabIcon(activeTab, "w-12 h-12 text-gray-300")}
-          </div>
-          <p className="text-gray-500 text-sm font-medium max-w-xs">{EMPTY_MESSAGES[activeTab]}</p>
+          <div className="bg-gray-50 p-4 rounded-full mb-4">{getTabIcon(activeTab, "w-12 h-12 text-gray-300")}</div>
+          <p className="text-gray-500 text-sm font-medium max-w-xs">Tidak ada tumpangan di kategori ini.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {filtered.map(ride => {
             const dateObj = new Date(ride.departure_time)
             const tanggal = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -111,10 +98,13 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
             const isPast = dateObj < new Date()
             const isActive = ride.status === 'tersedia'
 
+            // Ambil daftar booking yang aktif (belum dibatalkan / belum ditolak)
+            const activeBookings = ride.bookings?.filter(b => b.status === 'pending' || b.status === 'approved') || []
+            const pendingCount = activeBookings.filter(b => b.status === 'pending').length
+
             return (
               <div key={ride.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden group">
                 
-                {/* Header row */}
                 <div className="flex items-start justify-between gap-4 mb-4 border-b border-gray-100 pb-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -130,15 +120,14 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
                     </div>
                   </div>
 
-                  {/* Status badge */}
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 uppercase tracking-wider ${STATUS_BADGE[ride.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                      {getTabIcon(ride.status as Tab, "w-3.5 h-3.5")}
-                      {TAB_CONFIG[ride.status as Tab]?.label ?? ride.status}
+                      {getTabIcon(ride.status as Tab, "w-3.5 h-3.5")} {TAB_CONFIG[ride.status as Tab]?.label ?? ride.status}
                     </span>
-                    {ride.is_recurring && (
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1">
-                        <ArrowsClockwise weight="bold" className="w-3 h-3" /> {ride.recurring_days?.join(', ') ?? 'Rutin'}
+                    {/* Badge Notifikasi Pesanan Baru */}
+                    {pendingCount > 0 && (
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-orange-100 text-orange-700 border border-orange-200 flex items-center gap-1.5 animate-pulse">
+                        <Ticket weight="fill" className="w-3.5 h-3.5" /> {pendingCount} Menunggu
                       </span>
                     )}
                   </div>
@@ -147,57 +136,99 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wider">Harga Bensin</p>
-                    <p className="font-black text-blue-600 flex items-center gap-1.5">
-                      <Coins weight="duotone" className="w-4 h-4" /> 
-                      {ride.price === 0 ? 'GRATIS' : `Rp ${ride.price.toLocaleString('id-ID')}`}
-                    </p>
+                    <p className="font-black text-blue-600 flex items-center gap-1.5"><Coins weight="duotone" className="w-4 h-4" /> {ride.price === 0 ? 'GRATIS' : `Rp ${ride.price.toLocaleString('id-ID')}`}</p>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <p className="text-xs text-gray-400 font-medium mb-1 uppercase tracking-wider">Sisa Kursi</p>
-                    <p className="font-black text-gray-700 flex items-center gap-1.5">
-                      <Users weight="duotone" className="w-4 h-4" /> 
-                      {ride.available_seats} Kursi
-                    </p>
+                    <p className="font-black text-gray-700 flex items-center gap-1.5"><Users weight="duotone" className="w-4 h-4" /> {ride.available_seats} Kursi</p>
                   </div>
                 </div>
 
-                {ride.notes && (
-                  <p className="text-sm text-gray-500 italic mb-4 bg-yellow-50/50 p-3 rounded-lg border border-yellow-100">"{ride.notes}"</p>
+                {/* ── DAFTAR PENUMPANG (BOOKINGS) ── */}
+                {activeBookings.length > 0 && (
+                  <div className="mt-4 mb-4 pt-4 border-t border-gray-100 space-y-3">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <Ticket weight="duotone" className="w-4 h-4" /> Daftar Penumpang
+                    </h4>
+                    <div className="space-y-2">
+                      {activeBookings.map((booking: any) => {
+                        const passenger = booking.passenger || booking.profiles
+                        let waNumber = passenger?.phone_number?.replace(/[^0-9]/g, '') || ''
+                        if (waNumber.startsWith('0')) waNumber = '62' + waNumber.substring(1)
+
+                        return (
+                          <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-indigo-50/50 p-3 rounded-xl border border-indigo-50">
+                            <div className="flex items-center gap-3">
+                              {passenger?.avatar_url ? (
+                                <img src={passenger.avatar_url} alt="Passenger" className="w-10 h-10 rounded-full object-cover border border-indigo-200 shrink-0" />
+                              ) : (
+                                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-indigo-100 shrink-0">
+                                  <User weight="duotone" className="w-5 h-5 text-indigo-300" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-bold text-gray-800 text-sm leading-tight">{passenger?.full_name || 'Pengguna'}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${booking.status === 'approved' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
+                                    {booking.status === 'approved' ? 'Disetujui' : 'Menunggu'}
+                                  </span>
+                                  {waNumber && (
+                                    <a href={`https://wa.me/${waNumber}?text=Halo, saya pengemudi Mai-Milu. ${booking.status === 'approved' ? 'Pesanan kursi Anda sudah saya setujui.' : 'Terkait pesanan kursi Anda, ...'}`} target="_blank" rel="noopener noreferrer" className="text-[#25D366] hover:text-[#20bd5a] flex items-center gap-1 text-[11px] font-bold transition-colors">
+                                      <WhatsappLogo weight="fill" className="w-3.5 h-3.5" /> Hubungi
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Tombol Aksi Pengemudi */}
+                            {booking.status === 'pending' && isActive && (
+                              <div className="flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0">
+                                <form action={respondToBooking} className="flex-1 sm:flex-none">
+                                  <input type="hidden" name="bookingId" value={booking.id} />
+                                  <input type="hidden" name="rideId" value={ride.id} />
+                                  <input type="hidden" name="action" value="reject" />
+                                  <button type="submit" className="w-full bg-white text-red-600 border border-red-200 hover:bg-red-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                                    Tolak
+                                  </button>
+                                </form>
+                                <form action={respondToBooking} className="flex-1 sm:flex-none">
+                                  <input type="hidden" name="bookingId" value={booking.id} />
+                                  <input type="hidden" name="rideId" value={ride.id} />
+                                  <input type="hidden" name="action" value="approve" />
+                                  <button type="submit" className="w-full bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                                    Setujui
+                                  </button>
+                                </form>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
                 )}
 
-                {/* Action buttons */}
+                {/* ── TOMBOL STATUS TUMPANGAN (Action Buttons) ── */}
                 {isActive && (
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
                     {isPast && (
-                      <button
-                        onClick={() => setConfirmAction({ rideId: ride.id, action: 'selesai', origin: ride.origin, destination: ride.destination })}
-                        className="flex-1 bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
-                      >
+                      <button onClick={() => setConfirmAction({ rideId: ride.id, action: 'selesai', origin: ride.origin, destination: ride.destination })} className="flex-1 bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-green-100 transition-colors flex items-center justify-center gap-2">
                         <CheckCircle weight="bold" className="w-4 h-4" /> Tandai Selesai
                       </button>
                     )}
-                    <button
-                      onClick={() => setConfirmAction({ rideId: ride.id, action: 'dibatalkan', origin: ride.origin, destination: ride.destination })}
-                      className="flex-1 bg-orange-50 text-orange-700 border border-orange-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-orange-100 transition-colors flex items-center justify-center gap-2"
-                    >
+                    <button onClick={() => setConfirmAction({ rideId: ride.id, action: 'dibatalkan', origin: ride.origin, destination: ride.destination })} className="flex-1 bg-orange-50 text-orange-700 border border-orange-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-orange-100 transition-colors flex items-center justify-center gap-2">
                       <XCircle weight="bold" className="w-4 h-4" /> Batalkan
                     </button>
-                    <button
-                      onClick={() => setConfirmAction({ rideId: ride.id, action: 'delete', origin: ride.origin, destination: ride.destination })}
-                      className="bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center"
-                      title="Hapus"
-                    >
+                    <button onClick={() => setConfirmAction({ rideId: ride.id, action: 'delete', origin: ride.origin, destination: ride.destination })} className="bg-red-50 text-red-600 border border-red-200 px-4 py-2.5 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center" title="Hapus">
                       <Trash weight="bold" className="w-5 h-5" />
                     </button>
                   </div>
                 )}
 
                 {!isActive && (
-                  <div className="flex justify-end pt-1">
-                    <button
-                      onClick={() => setConfirmAction({ rideId: ride.id, action: 'delete', origin: ride.origin, destination: ride.destination })}
-                      className="bg-red-50 text-red-600 border border-red-200 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors flex items-center gap-2"
-                    >
+                  <div className="flex justify-end pt-4 border-t border-gray-100">
+                    <button onClick={() => setConfirmAction({ rideId: ride.id, action: 'delete', origin: ride.origin, destination: ride.destination })} className="bg-red-50 text-red-600 border border-red-200 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors flex items-center gap-2">
                       <Trash weight="bold" className="w-4 h-4" /> Hapus Riwayat
                     </button>
                   </div>
@@ -210,10 +241,7 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
 
       {/* ── Confirmation Modal ── */}
       {confirmAction && (
-        <div
-          className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-gray-900/40 backdrop-blur-sm px-4 pb-4 sm:pb-0 transition-opacity"
-          onClick={e => { if (e.target === e.currentTarget) setConfirmAction(null) }}
-        >
+        <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-gray-900/40 backdrop-blur-sm px-4 pb-4 sm:pb-0 transition-opacity" onClick={e => { if (e.target === e.currentTarget) setConfirmAction(null) }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
             <div className="mb-4">
               {confirmAction.action === 'selesai' && <CheckCircle weight="duotone" className="w-12 h-12 text-green-500 mb-3" />}
@@ -234,17 +262,14 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
               </div>
 
               <p className="text-sm text-gray-500 leading-relaxed">
-                {confirmAction.action === 'selesai'    && 'Tumpangan akan ditandai sebagai selesai dan menjadi riwayat yang baik untuk profil Anda.'}
-                {confirmAction.action === 'dibatalkan' && 'Tumpangan akan dibatalkan. Penumpang tidak akan bisa menemukannya lagi di beranda.'}
-                {confirmAction.action === 'delete'     && 'Tumpangan ini akan dihapus dari riwayat secara permanen. Tindakan ini tidak bisa dibatalkan.'}
+                {confirmAction.action === 'selesai'    && 'Tumpangan akan ditandai sebagai selesai dan menjadi riwayat yang baik.'}
+                {confirmAction.action === 'dibatalkan' && 'Tumpangan akan dibatalkan. Penumpang yang sudah memesan akan diberitahu.'}
+                {confirmAction.action === 'delete'     && 'Tumpangan ini akan dihapus permanen.'}
               </p>
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmAction(null)}
-                className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
-              >
+              <button onClick={() => setConfirmAction(null)} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">
                 Kembali
               </button>
 
@@ -259,12 +284,7 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide }: Pro
                 <form action={updateRideStatus} className="flex-1" onSubmit={() => setConfirmAction(null)}>
                   <input type="hidden" name="rideId" value={confirmAction.rideId} />
                   <input type="hidden" name="status" value={confirmAction.action} />
-                  <button
-                    type="submit"
-                    className={`w-full text-white font-bold py-3 rounded-xl transition-colors shadow-sm ${
-                      confirmAction.action === 'selesai' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'
-                    }`}
-                  >
+                  <button type="submit" className={`w-full text-white font-bold py-3 rounded-xl transition-colors shadow-sm ${confirmAction.action === 'selesai' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-500 hover:bg-orange-600'}`}>
                     {confirmAction.action === 'selesai' ? 'Selesaikan' : 'Batalkan'}
                   </button>
                 </form>
