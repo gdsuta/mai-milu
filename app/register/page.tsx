@@ -5,10 +5,23 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+// ── 1. SKEMA ZOD UNTUK REGISTRASI ──
+const registerSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+  password: z.string().min(6, "Kata sandi minimal 6 karakter"),
+  fullName: z.string().min(3, "Nama lengkap minimal 3 karakter"),
+  phone: z.string().min(9, "Nomor telepon terlalu pendek"),
+  address: z.string().min(10, "Alamat terlalu singkat, mohon diperjelas")
+})
+
+type RegisterFormValues = z.infer<typeof registerSchema>
 
 // ─────────────────────────────────────────────
 // CLIENT-SIDE IMAGE COMPRESSION
-// Uses the browser Canvas API — zero dependencies.
 // ─────────────────────────────────────────────
 async function compressImage(file: File, maxWidth: number, quality: number): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -38,7 +51,6 @@ async function compressImage(file: File, maxWidth: number, quality: number): Pro
   })
 }
 
-// 1. PERBAIKAN: Menangani null secara resmi agar kebal dari error TypeScript
 function formatBytes(bytes: number | null): string {
   if (!bytes) return '0 B'
   if (bytes < 1024) return bytes + ' B'
@@ -84,7 +96,6 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
       reader.readAsDataURL(compressed)
       onFileReady(compressed)
     } catch (err) {
-      // 2. PERBAIKAN: Penanganan tipe error yang aman
       const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak dikenal'
       alert('Gagal memproses gambar: ' + errorMessage)
       onFileReady(null)
@@ -132,7 +143,7 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
 
       {!compressing && preview && (
         <div className="flex items-start gap-3">
-          <img src={preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg border shadow-sm flex-shrink-0" />
+          <img src={preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg border shadow-sm shrink-0" />
           <div className="flex-1 text-xs text-gray-600 space-y-1">
             <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize)}</span></p>
             <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize)}</span></p>
@@ -151,27 +162,40 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
 }
 
 export default function RegisterPage() {
-  // 3. PERBAIKAN: Menambahkan non-null assertion (!) agar TypeScript tidak komplain
   const supabase = createClient()
   const router = useRouter()
+  
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({ email: '', password: '', fullName: '', phone: '', address: '' })
+  
+  // State khusus yang tidak dihandle text input RHF
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [ktpFile, setKtpFile] = useState<File | null>(null)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!agreedToTerms) { alert('Ups! Anda harus menyetujui Syarat & Ketentuan serta Kebijakan Privasi Mai-Milu sebelum mendaftar.'); return }
+  // ── 2. INSTALASI REACT HOOK FORM ──
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema)
+  })
+
+  // ── 3. FUNGSI SUBMIT (Dijalankan hanya jika Zod lolos) ──
+  const onSubmitForm = async (data: RegisterFormValues) => {
+    if (!agreedToTerms) { 
+      alert('Ups! Anda harus menyetujui Syarat & Ketentuan serta Kebijakan Privasi Mai-Milu sebelum mendaftar.')
+      return 
+    }
     setLoading(true)
+    
     try {
       let userId: string | undefined
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email: formData.email, password: formData.password })
+      const { data: authData, error: authError } = await supabase.auth.signUp({ 
+        email: data.email, 
+        password: data.password 
+      })
       
       if (authError) {
         if (authError.message === 'User already registered') {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: formData.email, password: formData.password })
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
           if (signInError) throw new Error('Email ini sudah terdaftar namun pendaftaran sebelumnya tidak selesai. Pastikan kata sandi sama dengan percobaan pertama, atau gunakan fitur "Lupa Sandi".')
           userId = signInData.user?.id
         } else {
@@ -201,9 +225,9 @@ export default function RegisterPage() {
 
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: userId, 
-        full_name: formData.fullName, 
-        phone_number: formData.phone,
-        home_address: formData.address, 
+        full_name: data.fullName, 
+        phone_number: data.phone,
+        home_address: data.address, 
         avatar_url: avatarUrl, 
         ktp_url: ktpUrl,
         verification_status: 'pending', 
@@ -216,7 +240,6 @@ export default function RegisterPage() {
       router.push('/verification')
       
     } catch (error) {
-      // 4. PERBAIKAN: Penanganan tipe error yang aman
       const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan tidak dikenal'
       alert('Ups, terjadi kesalahan: ' + errorMessage)
     } finally {
@@ -224,7 +247,6 @@ export default function RegisterPage() {
     }
   }
 
-  // ... (Sisa kode UI di bawahnya tetap sama persis dan aman)
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-10">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
@@ -234,21 +256,32 @@ export default function RegisterPage() {
         <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">Mai-Milu</h1>
         <p className="text-center text-gray-500 mb-8">Mari berbagi tumpangan bersama masyarakat Bali lainnya di komunitas Mai-Milu.</p>
 
-        <form onSubmit={handleRegister} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col gap-5">
           <div>
             <label className="text-sm font-semibold text-gray-700">Email</label>
-            <input type="email" required onChange={e => setFormData({...formData, email: e.target.value})}
-              className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" placeholder="anda@gmail.com" />
+            <input 
+              type="email" 
+              {...register('email')}
+              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`} 
+              placeholder="anda@gmail.com" 
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
           </div>
 
           <div>
             <label className="text-sm font-semibold text-gray-700">Kata Sandi</label>
             <div className="relative mt-1">
-              <input type={showPassword ? 'text' : 'password'} required
-                onChange={e => setFormData({...formData, password: e.target.value})}
-                className="w-full border border-gray-300 p-2 pr-10 rounded-lg text-gray-900" placeholder="Minimal 6 karakter" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                {...register('password')}
+                className={`w-full border p-2 pr-10 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`} 
+                placeholder="Minimal 6 karakter" 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+              >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
@@ -261,25 +294,42 @@ export default function RegisterPage() {
                 )}
               </button>
             </div>
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
 
           <hr className="my-2" />
 
           <div>
             <label className="text-sm font-semibold text-gray-700">Nama Lengkap (Sesuai KTP)</label>
-            <input type="text" required onChange={e => setFormData({...formData, fullName: e.target.value})}
-              className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" placeholder="Putu / Kadek / Komang..." />
+            <input 
+              type="text" 
+              {...register('fullName')}
+              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`} 
+              placeholder="Putu / Kadek / Komang..." 
+            />
+            {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>}
           </div>
+          
           <div>
             <label className="text-sm font-semibold text-gray-700">Nomor WhatsApp</label>
-            <input type="tel" required onChange={e => setFormData({...formData, phone: e.target.value})}
-              className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" placeholder="081..." />
+            <input 
+              type="tel" 
+              {...register('phone')}
+              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'}`} 
+              placeholder="081..." 
+            />
+            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
           </div>
+          
           <div>
             <label className="text-sm font-semibold text-gray-700">Alamat Rumah</label>
-            <textarea required onChange={e => setFormData({...formData, address: e.target.value})}
-              className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900"
-              placeholder="Perumahan Delta, Jl Kuta No 8, Desa Panji, Buleleng" rows={2} />
+            <textarea 
+              {...register('address')}
+              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
+              placeholder="Perumahan Delta, Jl Kuta No 8, Desa Panji, Buleleng" 
+              rows={2} 
+            />
+            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
           </div>
 
           <hr className="my-2" />
@@ -296,9 +346,14 @@ export default function RegisterPage() {
           />
 
           <div className="flex items-start gap-2 p-2 mt-2">
-            <input type="checkbox" id="terms_consent" required checked={agreedToTerms}
+            <input 
+              type="checkbox" 
+              id="terms_consent" 
+              required 
+              checked={agreedToTerms}
               onChange={e => setAgreedToTerms(e.target.checked)}
-              className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+              className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+            />
             <label htmlFor="terms_consent" className="text-sm text-gray-700 leading-snug">
               Saya menyetujui{' '}
               <Link href="/terms" target="_blank" className="text-blue-600 font-semibold hover:underline">Syarat & Ketentuan</Link>
@@ -308,8 +363,11 @@ export default function RegisterPage() {
             </label>
           </div>
 
-          <button type="submit" disabled={loading || !agreedToTerms}
-            className="w-full bg-blue-600 text-white font-bold p-3 rounded-lg mt-4 hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+          <button 
+            type="submit" 
+            disabled={loading || !agreedToTerms}
+            className="w-full bg-blue-600 text-white font-bold p-3 rounded-lg mt-4 hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
             {loading ? 'Memproses data Anda...' : 'Kirim Data Verifikasi'}
           </button>
         </form>

@@ -5,6 +5,17 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+// ── 1. SKEMA ZOD UNTUK LOGIN ──
+const loginSchema = z.object({
+  email: z.string().email("Format email tidak valid"),
+  password: z.string().min(1, "Kata sandi tidak boleh kosong")
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const supabase = createClient()
@@ -12,16 +23,20 @@ export default function LoginPage() {
   
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({ email: '', password: '' })
 
- const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // ── 2. INSTALASI REACT HOOK FORM ──
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema)
+  })
+
+  // ── 3. FUNGSI SUBMIT (Dijalankan hanya jika Zod lolos) ──
+  const onSubmitForm = async (data: LoginFormValues) => {
     setLoading(true)
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
+        email: data.email,
+        password: data.password,
       })
 
       if (error) throw error
@@ -34,13 +49,12 @@ export default function LoginPage() {
           .eq('id', user.id)
           .single()
 
-        // === PERBAIKAN LOGIKA RUTE PINTASAN ===
         if (profile?.role === 'admin') {
-          router.push('/admin') // Admin masuk ke Dasbor Admin
+          router.push('/admin')
         } else if (profile?.role === 'user') {
-          router.push('/home') // Pengguna yang sudah diverifikasi langsung ke Beranda!
+          router.push('/home')
         } else {
-          router.push('/verification') // Pengguna baru/pending tetap di Ruang Tunggu
+          router.push('/verification')
         }
       }
 
@@ -55,21 +69,24 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
         <div className="flex justify-center mb-6">
-		<Image src="/logo.png" alt="Mai-Milu Logo" width={80} height={80} className="rounded-full shadow-md" />
-		</div>
+          <Image src="/logo.png" alt="Mai-Milu Logo" width={80} height={80} className="rounded-full shadow-md" />
+        </div>
         <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">Mai-Milu</h1>
         <p className="text-center text-gray-500 mb-8">
-          Selamat datang Semeton Bali!<br />
+          Mari kurangi kemacetan di jalan dengan berbagi tumpangan!<br />
           Silahkan login untuk masuk ke menu utama.
         </p>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-5">
-          
+        <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col gap-5">
           <div>
             <label className="text-sm font-semibold text-gray-700">Email</label>
-            {/* Tambahan text-gray-900 di sini */}
-            <input type="email" required onChange={e => setFormData({...formData, email: e.target.value})} 
-              className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" placeholder="anda@gmail.com" />
+            <input 
+              type="email" 
+              {...register('email')} 
+              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`} 
+              placeholder="anda@gmail.com" 
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
           </div>
 
           <div>
@@ -78,12 +95,10 @@ export default function LoginPage() {
               <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline font-medium">Lupa sandi?</Link>
             </div>
             <div className="relative mt-1">
-              {/* Tambahan text-gray-900 di sini */}
               <input 
                 type={showPassword ? "text" : "password"} 
-                required 
-                onChange={e => setFormData({...formData, password: e.target.value})} 
-                className="w-full border border-gray-300 p-2 pr-10 rounded-lg text-gray-900" 
+                {...register('password')} 
+                className={`w-full border p-2 pr-10 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`} 
                 placeholder="Masukkan kata sandi Anda" 
               />
               <button 
@@ -103,6 +118,7 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
 
           <button type="submit" disabled={loading} 
@@ -115,12 +131,10 @@ export default function LoginPage() {
           Belum punya akun? <Link href="/register" className="text-blue-600 font-bold hover:underline">Daftar di sini</Link>
         </p>
 
-      {/* --- TEKS CREDIT DEVELOPER --- */}
         <div className="mt-8 text-center text-xs text-gray-400">
           <p>Developed by Gede Suta Pinatih</p>
           <p>Mai-Milu Web App v1.0.0</p>
         </div>
-
       </div>
     </div>
   )
