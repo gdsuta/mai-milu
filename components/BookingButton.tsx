@@ -41,7 +41,7 @@ export default function BookingButton({
         p_passenger_id: currentUserId,
       })
       if (error) throw error
-      if (!data.success) throw new Error(data.message)
+      if (!data.success) throw new Error(data.error)
 
       setBookingStatus('pending')
       setShowConfirm(false)
