@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Ticket, CircleNotch, CheckCircle, XCircle, WhatsappLogo, Prohibit } from '@phosphor-icons/react'
-import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
-type BookingStatus = 'none' | 'pending' | 'accepted' | 'cancelled' | 'rejected'
+type BookingStatus = 'none' | 'pending' | 'confirmed' | 'cancelled'
 
 type Props = {
   rideId: string
@@ -18,11 +16,18 @@ type Props = {
 }
 
 export default function BookingButton({
-  rideId, driverId, currentUserId, availableSeats, 
-  initialBookingStatus, initialBookingId, driverPhone
+  rideId,
+  driverId,
+  currentUserId,
+  availableSeats,
+  initialBookingStatus,
+  initialBookingId,
+  driverPhone,
 }: Props) {
-  const supabase = createClient()
-  const router = useRouter()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>(initialBookingStatus)
   const [bookingId, setBookingId] = useState<string | null>(initialBookingId)
@@ -36,16 +41,17 @@ export default function BookingButton({
   const handleBook = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase.rpc('book_ride' as any, {
+      const { data, error } = await supabase.rpc('book_ride', {
         p_ride_id: rideId,
-        p_passenger_id: currentUserId,
+        p_passenger_id: currentUserId, // PERBAIKAN: Harus p_passenger_id
       })
       if (error) throw error
-      if (!data.success) throw new Error(data.error)
+      // PERBAIKAN: Baca pesan dari RPC (data.message)
+      if (!data.success) throw new Error(data.message || 'Gagal memesan')
 
+      setBookingId(data.booking_id)
       setBookingStatus('pending')
       setShowConfirm(false)
-      router.refresh() // Refresh agar sisa kursi di UI berkurang
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Terjadi kesalahan'
       alert('Gagal memesan: ' + msg)
@@ -58,17 +64,16 @@ export default function BookingButton({
     if (!bookingId) return
     setLoading(true)
     try {
-      const { data, error } = await supabase.rpc('cancel_booking' as any, {
+      const { data, error } = await supabase.rpc('cancel_booking', {
         p_booking_id: bookingId,
-        p_passenger_id: currentUserId,
+        p_passenger_id: currentUserId, // PERBAIKAN: Harus p_passenger_id
       })
       if (error) throw error
-      if (!data.success) throw new Error(data.error)
+      if (!data.success) throw new Error(data.message || 'Gagal membatalkan')
 
       setBookingStatus('cancelled')
       setBookingId(null)
       setShowCancelConfirm(false)
-      router.refresh() // Refresh agar sisa kursi di UI bertambah
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Terjadi kesalahan'
       alert('Gagal membatalkan: ' + msg)
@@ -77,38 +82,29 @@ export default function BookingButton({
     }
   }
 
-  // Pengemudi tidak bisa memesan tumpangannya sendiri
   if (currentUserId === driverId) return null
 
-  // Kondisi: Sedang Menunggu
   if (bookingStatus === 'pending') {
     return (
       <>
-        <div className="flex gap-2 w-full mt-2 pt-2 border-t border-gray-100">
-          <div className="flex-1 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 shadow-sm">
-            <Ticket weight="duotone" className="w-5 h-5 text-indigo-600" />
-            <span className="text-indigo-700 font-bold text-sm">Menunggu Konfirmasi</span>
+        <div className="flex gap-2 w-full">
+          <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 flex items-center justify-center gap-2">
+            <span className="text-blue-600 font-bold text-sm">🎫 Menunggu Konfirmasi</span>
           </div>
-          <button onClick={() => setShowCancelConfirm(true)} className="bg-white text-red-500 border border-red-200 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-red-50 transition-colors shadow-sm">
+          <button onClick={() => setShowCancelConfirm(true)} className="bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition">
             Batal
           </button>
         </div>
 
-        {/* Modal Batal */}
         {showCancelConfirm && (
-          <div className="fixed inset-0 z-70 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm px-4" onClick={e => { if (e.target === e.currentTarget) setShowCancelConfirm(false) }}>
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95">
-              <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
-                <XCircle weight="duotone" className="w-8 h-8 text-red-500" />
-              </div>
-              <h3 className="text-xl font-black text-center text-gray-800 mb-2">Batalkan Pesanan?</h3>
-              <p className="text-sm text-center text-gray-500 mb-6 leading-relaxed">
-                Kursi Anda akan dikembalikan ke dalam tumpangan dan pesanan dibatalkan.
-              </p>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-4 pb-4 sm:pb-0" onClick={e => { if (e.target === e.currentTarget) setShowCancelConfirm(false) }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Batalkan Pemesanan?</h3>
+              <p className="text-sm text-gray-500 mb-6">Kursi akan dikembalikan dan pemesanan Anda akan dibatalkan.</p>
               <div className="flex gap-3">
-                <button onClick={() => setShowCancelConfirm(false)} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">Kembali</button>
-                <button onClick={handleCancel} disabled={loading} className="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
-                  {loading ? <CircleNotch className="w-5 h-5 animate-spin" /> : 'Ya, Batalkan'}
+                <button onClick={() => setShowCancelConfirm(false)} className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl hover:bg-gray-200 transition">Kembali</button>
+                <button onClick={handleCancel} disabled={loading} className="flex-1 bg-red-600 text-white font-bold py-2.5 rounded-xl hover:bg-red-700 transition disabled:bg-gray-300">
+                  {loading ? 'Membatalkan...' : 'Ya, Batalkan'}
                 </button>
               </div>
             </div>
@@ -118,74 +114,46 @@ export default function BookingButton({
     )
   }
 
-  // Kondisi: Disetujui
-  if (bookingStatus === 'accepted') {
+  if (bookingStatus === 'confirmed') {
     return (
-      <div className="flex gap-2 w-full mt-2 pt-2 border-t border-gray-100">
-        <div className="flex-1 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2 shadow-sm">
-          <CheckCircle weight="fill" className="w-5 h-5 text-green-600" />
-          <span className="text-green-800 font-bold text-sm">Disetujui</span>
+      <div className="flex gap-2 w-full">
+        <div className="flex-1 bg-green-50 border border-green-200 rounded-lg px-4 py-2 flex items-center justify-center gap-2">
+          <span className="text-green-700 font-bold text-sm">✅ Kursi Terkonfirmasi</span>
         </div>
-        <a href={`https://wa.me/${waNumber}?text=Halo, saya penumpang Mai-Milu yang kursinya sudah disetujui. Sampai jumpa!`} target="_blank" rel="noopener noreferrer"
-          className="bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center shadow-sm">
-          <WhatsappLogo weight="fill" className="w-5 h-5" />
+        <a href={`https://wa.me/${waNumber}?text=Halo, pemesanan kursi saya sudah dikonfirmasi. Sampai jumpa!`} target="_blank" rel="noopener noreferrer" className="bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-600 transition">
+          💬 WA
         </a>
       </div>
     )
   }
 
-  // Kondisi: Ditolak
-  if (bookingStatus === 'rejected') {
+  if (availableSeats <= 0 && bookingStatus === 'none') {
     return (
-      <div className="w-full mt-2 pt-2 border-t border-gray-100">
-        <div className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2">
-          <Prohibit weight="bold" className="w-5 h-5 text-gray-400" />
-          <span className="text-gray-500 font-bold text-sm">Ditolak Pengemudi</span>
-        </div>
+      <div className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 text-center text-sm text-gray-500 font-semibold">
+        Kursi Penuh
       </div>
     )
   }
 
-  // Kondisi: Kursi Habis (dan pengguna belum pesan)
-  if (availableSeats <= 0 && (!bookingStatus || bookingStatus === 'none' || bookingStatus === 'cancelled')) {
-    return (
-      <div className="w-full mt-2 pt-2 border-t border-gray-100">
-        <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 flex items-center justify-center gap-2">
-          <XCircle weight="duotone" className="w-5 h-5 text-gray-400" />
-          <span className="text-gray-400 font-bold text-sm">Kursi Penuh</span>
-        </div>
-      </div>
-    )
-  }
-
-  // Kondisi Default: Bisa Dipesan
   return (
     <>
-      <div className="w-full mt-2 pt-2 border-t border-gray-100 flex gap-2">
-        <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer" className="bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2.5 rounded-xl font-bold transition-colors flex items-center justify-center shadow-sm">
-          <WhatsappLogo weight="duotone" className="w-5 h-5" />
-        </a>
-        <button onClick={() => setShowConfirm(true)} className="flex-1 bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-md">
-          <Ticket weight="bold" className="w-5 h-5" /> Pesan Kursi
-        </button>
-      </div>
+      <button onClick={() => setShowConfirm(true)} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition flex items-center justify-center gap-2">
+        🎫 Pesan Kursi
+      </button>
 
-      {/* Modal Pesan */}
       {showConfirm && (
-        <div className="fixed inset-0 z-70 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm px-4" onClick={e => { if (e.target === e.currentTarget) setShowConfirm(false) }}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95">
-            <div className="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-100">
-              <Ticket weight="duotone" className="w-8 h-8 text-indigo-600" />
-            </div>
-            <h3 className="text-xl font-black text-center text-gray-800 mb-2">Konfirmasi Pesanan</h3>
-            <div className="bg-indigo-50/50 rounded-xl p-4 mb-6 border border-indigo-100 space-y-2">
-              <p className="text-sm text-indigo-900 flex items-center gap-2 font-medium"><Ticket weight="duotone" className="w-4 h-4" /> Memerlukan konfirmasi pengemudi.</p>
-              <p className="text-sm text-indigo-900 flex items-center gap-2 font-medium"><WhatsappLogo weight="duotone" className="w-4 h-4" /> Pengemudi bisa menelpon via WA.</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-4 pb-4 sm:pb-0" onClick={e => { if (e.target === e.currentTarget) setShowConfirm(false) }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">Konfirmasi Pemesanan</h3>
+            <div className="bg-blue-50 rounded-xl p-4 mb-4 text-sm text-blue-800 space-y-1">
+              <p>🎫 Pemesanan akan berstatus <strong>Menunggu Konfirmasi</strong></p>
+              <p>💬 Pengemudi akan menghubungi Anda via WhatsApp untuk konfirmasi</p>
+              <p>🚗 {availableSeats} kursi tersedia</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowConfirm(false)} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors">Batal</button>
-              <button onClick={handleBook} disabled={loading} className="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                {loading ? <CircleNotch className="w-5 h-5 animate-spin" /> : 'Ya, Pesan!'}
+              <button onClick={() => setShowConfirm(false)} className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl hover:bg-gray-200 transition">Batal</button>
+              <button onClick={handleBook} disabled={loading} className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl hover:bg-blue-700 transition disabled:bg-gray-300">
+                {loading ? 'Memproses...' : 'Ya, Pesan!'}
               </button>
             </div>
           </div>
