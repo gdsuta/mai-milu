@@ -3,21 +3,44 @@ import { redirect } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Link from 'next/link'
 import ZoomableImage from '@/components/ZoomableImage'
-import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk kita
+import { createServer } from '@/lib/supabase/server'
 
-export default async function AdminDashboard() {
+// Menambahkan properti pencarian URL (searchParams) untuk melacak halaman
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function AdminDashboard(props: Props) {
   const supabase = await createServer()
 
-  // Ambil user. Kita hapus redirect(!user) karena Middleware sudah menanganinya.
+  // 1. Dapatkan parameter halaman dari URL (contoh: ?page=2)
+  const searchParams = await props.searchParams
+  const currentPage = Number(searchParams?.page) || 1
+  const pageSize = 20 // Beban maksimal per halaman
+
+  // 2. Rumus kalkulasi rentang (offset)
+  const startOffset = (currentPage - 1) * pageSize
+  const endOffset = startOffset + pageSize - 1
+
+  // Pengecekan Auth
   const { data: { user } } = await supabase.auth.getUser()
-  
-  // Perlindungan tingkat kedua: pastikan dia benar-benar admin
   const { data: profile } = await supabase.from('profiles').select('role, full_name, avatar_url').eq('id', user!.id).single()
   if (profile?.role !== 'admin') redirect('/home')
 
+  // Tarik data pengguna yang masih pending (tanpa pagination)
   const { data: pendingUsers } = await supabase.from('profiles').select('*').eq('verification_status', 'pending')
-  const { data: verifiedUsers } = await supabase.from('profiles').select('*').eq('verification_status', 'verified').neq('role', 'admin')
 
+  // Tarik data pengguna aktif DENGAN pagination dan hitung total datanya
+  const { data: verifiedUsers, count: totalVerified } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact' }) // Minta Supabase menghitung total baris
+    .eq('verification_status', 'verified')
+    .neq('role', 'admin')
+    .range(startOffset, endOffset) // Batasi penarikan dari start ke end
+
+  const totalPages = totalVerified ? Math.ceil(totalVerified / pageSize) : 1
+
+  // Proses KTP untuk pengguna pending
   const usersWithSignedUrls = await Promise.all(
     (pendingUsers || []).map(async (u) => {
       let signedKtpUrl = null
@@ -29,9 +52,10 @@ export default async function AdminDashboard() {
     })
   )
 
+  // Server Actions
   async function approveUser(formData: FormData) {
     'use server'
-    const supabaseServer = await createServer() // Sangat ringkas!
+    const supabaseServer = await createServer()
     const userId = formData.get('userId') as string
     const ktpPath = formData.get('ktpPath') as string
 
@@ -42,7 +66,7 @@ export default async function AdminDashboard() {
 
   async function revokeAccess(formData: FormData) {
     'use server'
-    const supabaseServer = await createServer() // Sangat ringkas!
+    const supabaseServer = await createServer()
     const userId = formData.get('userId') as string
     await supabaseServer.from('profiles').update({ verification_status: 'rejected' }).eq('id', userId)
     revalidatePath('/admin') 
@@ -60,7 +84,7 @@ export default async function AdminDashboard() {
             </Link>
         </div>
         
-        {/* BAGIAN 1: Menunggu Persetujuan */}
+        {/* BAGIAN 1: Menunggu Persetujuan (Tidak dipaginasi) */}
         <h2 className="text-xl font-bold text-gray-700 mb-4">Menunggu Verifikasi KTP</h2>
         {(!usersWithSignedUrls || usersWithSignedUrls.length === 0) ? (
           <div className="bg-white p-6 rounded-lg shadow-sm text-center mb-8 border-l-4 border-green-500">
@@ -98,7 +122,7 @@ export default async function AdminDashboard() {
           </div>
         )}
 
-        {/* BAGIAN 2: Pengguna Aktif (Terverifikasi) */}
+        {/* BAGIAN 2: Pengguna Aktif (Dengan Pagination) */}
         <h2 className="text-xl font-bold text-gray-700 mb-4">Pengguna Aktif (Terverifikasi)</h2>
         {(!verifiedUsers || verifiedUsers.length === 0) ? (
           <div className="bg-white p-6 rounded-lg shadow-sm text-center">
@@ -109,7 +133,7 @@ export default async function AdminDashboard() {
             {verifiedUsers.map((u) => (
               <div key={u.id} className="bg-white rounded-lg shadow-sm border p-4 flex flex-row items-center gap-3">
                 {u.avatar_url
-                  ? <img src={u.avatar_url} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  ? <img src={u.avatar_url} alt={u.full_name ?? "User avatar"} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                   : <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm flex-shrink-0">👤</div>
                 }
                 <div className="flex-1 min-w-0">
@@ -124,6 +148,35 @@ export default async function AdminDashboard() {
                 </form>
               </div>
             ))}
+
+            {/* Navigasi Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-gray-200">
+                {currentPage > 1 ? (
+                  <Link href={`/admin?page=${currentPage - 1}`} className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 font-semibold text-sm transition">
+                    ⬅️ Sebelumnya
+                  </Link>
+                ) : (
+                  <button disabled className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed font-semibold text-sm">
+                    ⬅️ Sebelumnya
+                  </button>
+                )}
+                
+                <span className="font-bold text-gray-600 text-sm bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
+                  Halaman {currentPage} dari {totalPages}
+                </span>
+
+                {currentPage < totalPages ? (
+                  <Link href={`/admin?page=${currentPage + 1}`} className="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-gray-700 hover:bg-gray-50 font-semibold text-sm transition">
+                    Selanjutnya ➡️
+                  </Link>
+                ) : (
+                  <button disabled className="px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed font-semibold text-sm">
+                    Selanjutnya ➡️
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
