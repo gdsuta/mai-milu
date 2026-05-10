@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
-type BookingStatus = 'none' | 'pending' | 'accepted' | 'cancelled'
+type BookingStatus = 'none' | 'pending' | 'accepted' | 'rejected' | 'cancelled'
 
 type Props = {
   rideId: string
