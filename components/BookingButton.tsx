@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
-type BookingStatus = 'none' | 'pending' | 'confirmed' | 'cancelled'
+type BookingStatus = 'none' | 'pending' | 'accepted' | 'cancelled'
 
 type Props = {
   rideId: string
@@ -114,7 +114,7 @@ export default function BookingButton({
     )
   }
 
-  if (bookingStatus === 'confirmed') {
+  if (bookingStatus === 'accepted') {
     return (
       <div className="flex gap-2 w-full">
         <div className="flex-1 bg-green-50 border border-green-200 rounded-lg px-4 py-2 flex items-center justify-center gap-2">
