@@ -8,19 +8,16 @@ import Navbar from '@/components/Navbar'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-// Impor ikon profesional dari Lucide
-import { MapPin, Flag, Calculator, Repeat, Calendar, Clock, Users, Fuel, FileText, CheckCircle2, Loader2, X } from 'lucide-react'
+// Impor ikon dari Phosphor
+import { MapPin, Flag, Calculator, ArrowsClockwise, CalendarBlank, Clock, Users, GasPump, FileText, CheckCircle, CircleNotch, X } from '@phosphor-icons/react'
 
 const rideSchema = z.object({
   origin: z.string().min(3, "Lokasi asal minimal 3 karakter"),
   destination: z.string().min(3, "Tujuan akhir minimal 3 karakter"),
   departureDate: z.string().optional(),
   departureTime: z.string().min(1, "Jam wajib diisi"),
-  
-  // PERBAIKAN: Gunakan z.number() biasa karena input sudah valueAsNumber: true
   availableSeats: z.number({ message: "Wajib diisi angka" }).min(1, "Minimal 1 kursi").max(10, "Maksimal 10 kursi"),
   price: z.number({ message: "Wajib diisi angka" }).min(0, "Harga tidak boleh minus"),
-  
   notes: z.string().optional()
 })
 
@@ -252,8 +249,8 @@ export default function OfferRidePage() {
 
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Tawarkan Tumpangan</h1>
-            <Link href="/home" className="text-gray-500 hover:text-red-500 text-sm font-bold bg-gray-100 px-3 py-1 rounded-lg flex items-center gap-1 transition">
-              <X className="w-4 h-4" /> Batal
+            <Link href="/home" className="text-gray-500 hover:text-red-500 text-sm font-bold bg-gray-100 px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+              <X weight="bold" className="w-4 h-4" /> Batal
             </Link>
           </div>
 
@@ -261,74 +258,74 @@ export default function OfferRidePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-blue-500" /> Berangkat Dari
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                  <MapPin weight="duotone" className="w-5 h-5 text-blue-500" /> Berangkat Dari
                 </label>
                 <input type="text" {...register('origin')}
-                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.origin ? 'border-red-500' : 'border-gray-300'}`} 
+                  className={`w-full border p-2.5 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow ${errors.origin ? 'border-red-500' : 'border-gray-300'}`} 
                   placeholder="Cth: Sangsit" 
                 />
-                {errors.origin && <p className="text-red-500 text-xs mt-1">{errors.origin.message}</p>}
+                {errors.origin && <p className="text-red-500 text-xs mt-1.5">{errors.origin.message}</p>}
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <Flag className="w-4 h-4 text-red-500" /> Tujuan Akhir
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                  <Flag weight="duotone" className="w-5 h-5 text-red-500" /> Tujuan Akhir
                 </label>
                 <input type="text" {...register('destination')}
-                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.destination ? 'border-red-500' : 'border-gray-300'}`} 
+                  className={`w-full border p-2.5 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow ${errors.destination ? 'border-red-500' : 'border-gray-300'}`} 
                   placeholder="Cth: Rendang" 
                 />
-                {errors.destination && <p className="text-red-500 text-xs mt-1">{errors.destination.message}</p>}
+                {errors.destination && <p className="text-red-500 text-xs mt-1.5">{errors.destination.message}</p>}
               </div>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-sm text-blue-800">
                 {distanceKm
-                  ? <p>Estimasi Jarak: <span className="font-bold text-lg">{distanceKm} KM</span></p>
+                  ? <p>Estimasi Jarak: <span className="font-black text-lg ml-1">{distanceKm} KM</span></p>
                   : <p className="text-xs">Klik tombol di samping untuk menghitung jarak dan rekomendasi uang bensin.</p>
                 }
               </div>
               <button type="button" onClick={handleCalculateDistance} disabled={isCalculating}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:bg-gray-400 whitespace-nowrap w-full sm:w-auto shadow-sm flex items-center justify-center gap-2">
-                {isCalculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:bg-gray-400 whitespace-nowrap w-full sm:w-auto shadow-sm flex items-center justify-center gap-2 transition-colors">
+                {isCalculating ? <CircleNotch weight="bold" className="w-4 h-4 animate-spin" /> : <Calculator weight="duotone" className="w-5 h-5" />}
                 {isCalculating ? 'Menghitung...' : 'Hitung Jarak'}
               </button>
             </div>
 
-            <hr className="my-1" />
+            <hr className="my-1 border-gray-100" />
 
-            <div className="bg-purple-50 border border-purple-100 rounded-xl p-4">
+            <div className="bg-purple-50 border border-purple-100 rounded-xl p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-purple-800 flex items-center gap-1.5">
-                    <Repeat className="w-4 h-4" /> Jadwal Rutin
+                  <p className="text-sm font-bold text-purple-800 flex items-center gap-2">
+                    <ArrowsClockwise weight="bold" className="w-4 h-4" /> Jadwal Rutin
                   </p>
-                  <p className="text-xs text-purple-600 mt-0.5">Aktifkan untuk membuat jadwal berulang setiap minggu.</p>
+                  <p className="text-xs text-purple-600 mt-1">Aktifkan untuk membuat jadwal berulang setiap minggu.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsRecurring(!isRecurring)}
-                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${isRecurring ? 'bg-purple-600' : 'bg-gray-300'}`}
+                  className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none shrink-0 ${isRecurring ? 'bg-purple-600' : 'bg-gray-300'}`}
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isRecurring ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300 ${isRecurring ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>
               </div>
 
               {isRecurring && (
-                <div className="mt-4 space-y-4">
+                <div className="mt-5 space-y-4">
                   <div>
-                    <p className="text-xs font-semibold text-purple-700 mb-2">Hari yang aktif:</p>
+                    <p className="text-xs font-bold text-purple-700 mb-2.5 uppercase tracking-wide">Hari yang aktif:</p>
                     <div className="flex gap-2 flex-wrap">
                       {DAYS.map(day => (
                         <button
                           key={day.id}
                           type="button"
                           onClick={() => toggleDay(day.id)}
-                          className={`w-11 h-11 rounded-xl text-sm font-bold border-2 transition ${
+                          className={`w-11 h-11 rounded-xl text-sm font-bold border-2 transition-all ${
                             selectedDays.includes(day.id)
-                              ? 'bg-purple-600 text-white border-purple-600'
-                              : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
+                              ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                              : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
                           }`}
                         >
                           {day.label}
@@ -338,17 +335,17 @@ export default function OfferRidePage() {
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-purple-700 mb-2">Berlaku selama:</p>
+                    <p className="text-xs font-bold text-purple-700 mb-2.5 uppercase tracking-wide">Berlaku selama:</p>
                     <div className="flex gap-2">
                       {[1, 2, 4, 8].map(w => (
                         <button
                           key={w}
                           type="button"
                           onClick={() => setWeeksAhead(w)}
-                          className={`flex-1 py-2 rounded-lg text-sm font-bold border transition ${
+                          className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${
                             weeksAhead === w
-                              ? 'bg-purple-600 text-white border-purple-600'
-                              : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'
+                              ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                              : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
                           }`}
                         >
                           {w} minggu
@@ -358,84 +355,84 @@ export default function OfferRidePage() {
                   </div>
 
                   {selectedDays.length > 0 && (
-                    <div className="bg-purple-100 rounded-lg px-3 py-2 text-xs text-purple-800 font-semibold flex items-center gap-2">
-                      <Calendar className="w-4 h-4" /> 
-                      <span>Akan membuat <span className="font-black">{recurringRideCount}</span> jadwal tumpangan ({selectedDays.join(', ')} × {weeksAhead} minggu)</span>
+                    <div className="bg-purple-100 rounded-lg px-4 py-3 text-xs text-purple-800 font-medium flex items-center gap-2 mt-2">
+                      <CalendarBlank weight="duotone" className="w-5 h-5 shrink-0" /> 
+                      <span>Akan membuat <span className="font-black text-sm mx-1">{recurringRideCount}</span> jadwal tumpangan ({selectedDays.join(', ')} × {weeksAhead} minggu)</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <hr className="my-1" />
+            <hr className="my-1 border-gray-100" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {!isRecurring && (
                 <div>
-                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-gray-500" /> Tanggal
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                    <CalendarBlank weight="duotone" className="w-5 h-5 text-gray-500" /> Tanggal
                   </label>
                   <input type="date" min={new Date().toISOString().split('T')[0]} {...register('departureDate')}
-                    className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.departureDate ? 'border-red-500' : 'border-gray-300'}`} 
+                    className={`w-full border p-2.5 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow ${errors.departureDate ? 'border-red-500' : 'border-gray-300'}`} 
                   />
-                  {errors.departureDate && <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>}
+                  {errors.departureDate && <p className="text-red-500 text-xs mt-1.5">{errors.departureDate.message}</p>}
                 </div>
               )}
               <div className={isRecurring ? 'md:col-span-2' : ''}>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-gray-500" /> Jam (WITA)
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                  <Clock weight="duotone" className="w-5 h-5 text-gray-500" /> Jam (WITA)
                 </label>
                 <input type="time" {...register('departureTime')}
-                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.departureTime ? 'border-red-500' : 'border-gray-300'}`} 
+                  className={`w-full border p-2.5 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow ${errors.departureTime ? 'border-red-500' : 'border-gray-300'}`} 
                 />
-                {errors.departureTime && <p className="text-red-500 text-xs mt-1">{errors.departureTime.message}</p>}
+                {errors.departureTime && <p className="text-red-500 text-xs mt-1.5">{errors.departureTime.message}</p>}
                 {isRecurring && (
-                  <p className="text-xs text-gray-400 mt-1">Jadwal akan dimulai dari hari terpilih berikutnya.</p>
+                  <p className="text-xs text-gray-400 mt-2 flex items-center gap-1.5"><ArrowsClockwise className="w-3 h-3" /> Jadwal akan dimulai dari hari terpilih berikutnya.</p>
                 )}
               </div>
             </div>
 
-            <hr className="my-1" />
+            <hr className="my-1 border-gray-100" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <Users className="w-4 h-4 text-gray-500" /> Kursi Kosong
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                  <Users weight="duotone" className="w-5 h-5 text-gray-500" /> Kursi Kosong
                 </label>
                 <input type="number" {...register('availableSeats', { valueAsNumber: true })}
-                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.availableSeats ? 'border-red-500' : 'border-gray-300'}`} 
+                  className={`w-full border p-2.5 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow ${errors.availableSeats ? 'border-red-500' : 'border-gray-300'}`} 
                 />
-                {errors.availableSeats && <p className="text-red-500 text-xs mt-1">{errors.availableSeats.message}</p>}
+                {errors.availableSeats && <p className="text-red-500 text-xs mt-1.5">{errors.availableSeats.message}</p>}
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                  <Fuel className="w-4 h-4 text-gray-500" /> Uang Bensin (Rp)
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                  <GasPump weight="duotone" className="w-5 h-5 text-gray-500" /> Uang Bensin (Rp)
                 </label>
                 <input type="number" step="1000" {...register('price', { valueAsNumber: true })}
-                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 bg-green-50 focus:ring-2 focus:ring-green-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`} 
+                  className={`w-full border p-2.5 rounded-lg text-gray-900 bg-green-50 focus:ring-2 focus:ring-green-500 outline-none transition-shadow ${errors.price ? 'border-red-500' : 'border-gray-300'}`} 
                 />
-                {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
+                {errors.price && <p className="text-red-500 text-xs mt-1.5">{errors.price.message}</p>}
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-gray-500" /> Catatan Tambahan
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-1.5">
+                <FileText weight="duotone" className="w-5 h-5 text-gray-500" /> Catatan Tambahan
               </label>
               <textarea {...register('notes')}
-                className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900"
-                placeholder="Titik kumpul yang lebih spesifik..." rows={2} 
+                className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+                placeholder="Titik kumpul yang lebih spesifik..." rows={3} 
               />
             </div>
 
             <button type="submit" disabled={loading || (isRecurring && selectedDays.length === 0)}
-              className="w-full bg-green-600 text-white font-bold p-3 rounded-lg mt-2 hover:bg-green-700 disabled:bg-gray-400 shadow-md flex items-center justify-center gap-2 transition-all">
+              className="w-full bg-green-600 text-white font-bold p-3.5 rounded-xl mt-3 hover:bg-green-700 disabled:bg-gray-400 shadow-md flex items-center justify-center gap-2.5 transition-all text-[15px]">
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <CircleNotch weight="bold" className="w-5 h-5 animate-spin" />
               ) : isRecurring ? (
-                <Repeat className="w-5 h-5" />
+                <ArrowsClockwise weight="bold" className="w-5 h-5" />
               ) : (
-                <CheckCircle2 className="w-5 h-5" />
+                <CheckCircle weight="bold" className="w-5 h-5" />
               )}
               
               {loading
