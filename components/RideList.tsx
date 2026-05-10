@@ -42,7 +42,7 @@ type MyRating = {
 type MyBooking = {
   id: string
   ride_id: string
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  status: 'pending' | 'accepted' | 'rejected' | 'cancelled'
 }
 
 type RatingModal = {
