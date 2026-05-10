@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import StarRatingModal from './StarRatingModal'
 import StarDisplay from './StarDisplay'
-// Impor ikon dari Lucide
-import { Target, User, Repeat, MapPin, Flag, Calendar, Clock, Search, Coins, Gift, Zap, Trash2, MessageCircle, PlusCircle, X } from 'lucide-react'
+// Impor ikon berkelas dari Phosphor
+import { Target, User, ArrowsClockwise, MapPin, Flag, CalendarBlank, Clock, MagnifyingGlass, Coins, Gift, Lightning, Trash, WhatsappLogo, PlusCircle, X } from '@phosphor-icons/react'
 
 type Ride = {
   id: string
@@ -158,7 +158,6 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
         const map: Record<string, DriverRating> = {}
         drData.forEach((r) => {
           if (r.driver_id) {
-            // PERBAIKAN: Menjamin tidak ada data null yang masuk ke state
             map[r.driver_id] = {
               driver_id: r.driver_id,
               avg_score: r.avg_score ?? 0,
@@ -250,7 +249,7 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
       {matchedRides.length > 0 && (
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-3">
-            <Target className="w-6 h-6 text-indigo-500" />
+            <Target weight="duotone" className="w-7 h-7 text-indigo-500" />
             <h3 className="font-bold text-gray-800">Cocok untuk Anda</h3>
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
               Berdasarkan lokasi & waktu
@@ -272,8 +271,8 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                       {ride.profiles?.avatar_url ? (
                         <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border"/>
                       ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-gray-400" />
+                        <div className="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center">
+                          <User weight="duotone" className="w-6 h-6 text-gray-400" />
                         </div>
                       )}
                     </a>
@@ -284,7 +283,7 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                       <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">Pengemudi Terverifikasi</p>
                       {ride.is_recurring && (
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 mt-1 ml-1 flex items-center gap-1 w-max">
-                          <Repeat className="w-3 h-3" /> Rutin
+                          <ArrowsClockwise weight="bold" className="w-3 h-3" /> Rutin
                         </span>
                       )}
                       <div className="mt-1">
@@ -299,95 +298,96 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                     <p className="text-xs text-gray-500">{ride.available_seats} kursi</p>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <MapPin className="w-4 h-4 text-blue-500" />
-                    <span className="font-semibold">{ride.origin}</span>
-                    <span className="text-gray-400">→</span>
-                    <span className="font-semibold">{ride.destination}</span>
+                  <div className="flex items-center gap-2 text-sm text-gray-700 bg-white/50 p-2 rounded-lg border border-blue-100">
+                    <MapPin weight="duotone" className="w-5 h-5 text-blue-500 shrink-0" />
+                    <span className="font-semibold truncate">{ride.origin}</span>
+                    <span className="text-gray-400 mx-1">→</span>
+                    <Flag weight="duotone" className="w-5 h-5 text-red-500 shrink-0" />
+                    <span className="font-semibold truncate">{ride.destination}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {tanggal}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {jam} WITA</span>
-                    {ride.is_recurring && <span className="text-purple-600 font-semibold flex items-center gap-1"><Repeat className="w-3.5 h-3.5" /> Rutin</span>}
+                  <div className="flex items-center gap-4 text-xs text-gray-600 font-medium">
+                    <span className="flex items-center gap-1.5"><CalendarBlank weight="duotone" className="w-4 h-4 text-gray-400" /> {tanggal}</span>
+                    <span className="flex items-center gap-1.5"><Clock weight="duotone" className="w-4 h-4 text-gray-400" /> {jam} WITA</span>
+                    {ride.is_recurring && <span className="text-purple-600 font-semibold flex items-center gap-1.5"><ArrowsClockwise weight="bold" className="w-3.5 h-3.5" /> Rutin</span>}
                   </div>
 
                   {reasons.length > 0 && (
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex gap-1 flex-wrap mt-1">
                       {reasons.map((r, i) => (
-                        <span key={i} className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
+                        <span key={i} className="text-xs bg-blue-100 text-blue-700 font-semibold px-2.5 py-1 rounded-full">
                           {r}
                         </span>
                       ))}
-                      <span className="text-xs bg-white text-blue-400 border border-blue-200 font-semibold px-2 py-0.5 rounded-full ml-auto">
+                      <span className="text-xs bg-white text-blue-400 border border-blue-200 font-semibold px-2.5 py-1 rounded-full ml-auto">
                         Skor {score}
                       </span>
                     </div>
                   )}
 
                   <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
-                     className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 rounded-lg text-center transition flex items-center justify-center gap-2">
-                    <MessageCircle className="w-4 h-4" /> Hubungi via WhatsApp
+                     className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2.5 rounded-lg text-center transition flex items-center justify-center gap-2 mt-2 shadow-sm">
+                    <WhatsappLogo weight="fill" className="w-5 h-5" /> Hubungi via WhatsApp
                   </a>
                 </div>
               )
             })}
           </div>
-          <div className="flex items-center gap-2 mt-4 mb-1">
+          <div className="flex items-center gap-2 mt-6 mb-2">
             <hr className="flex-1 border-gray-200"/>
-            <span className="text-xs text-gray-400 whitespace-nowrap">Semua Tumpangan</span>
+            <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Semua Tumpangan</span>
             <hr className="flex-1 border-gray-200"/>
           </div>
         </div>
       )}
 
       {/* Search & Filter Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 space-y-3">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 space-y-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <MagnifyingGlass weight="bold" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input type="text"
                  value={search}
                  onChange={e=>setSearch(e.target.value)}
                  placeholder="Cari asal atau tujuan... (cth: Singaraja)"
-                 className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
+                 className="w-full pl-9 pr-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"/>
           {search && (
-            <button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-              <X className="w-4 h-4" />
+            <button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">
+              <X weight="bold" className="w-4 h-4" />
             </button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-gray-500 mr-1">Urutkan:</span>
           {([
-            { value: 'time',       label: 'Waktu Terdekat', icon: <Clock className="w-3.5 h-3.5 mr-1 inline-block" /> },
-            { value: 'price_asc',  label: 'Harga Termurah', icon: <Coins className="w-3.5 h-3.5 mr-1 inline-block" /> },
-            { value: 'price_desc', label: 'Harga Termahal', icon: <Coins className="w-3.5 h-3.5 mr-1 inline-block" /> },
+            { value: 'time',       label: 'Waktu Terdekat', icon: <Clock weight="duotone" className="w-4 h-4 mr-1.5 inline-block" /> },
+            { value: 'price_asc',  label: 'Harga Termurah', icon: <Coins weight="duotone" className="w-4 h-4 mr-1.5 inline-block" /> },
+            { value: 'price_desc', label: 'Harga Termahal', icon: <Coins weight="duotone" className="w-4 h-4 mr-1.5 inline-block" /> },
           ] as const).map(opt => (
             <button key={opt.value}
                     onClick={()=>setSortBy(opt.value)}
-                    className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition ${
+                    className={`text-xs px-3.5 py-2 rounded-full font-semibold border transition-all flex items-center ${
                       sortBy===opt.value
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-400 hover:bg-white'
                     }`}>
               {opt.icon} {opt.label}
             </button>
           ))}
           <button onClick={()=>setFreeOnly(!freeOnly)}
-                  className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition ml-auto ${
+                  className={`text-xs px-3.5 py-2 rounded-full font-semibold border transition-all flex items-center ml-auto ${
                     freeOnly
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                    ? 'bg-green-600 text-white border-green-600 shadow-sm'
+                    : 'bg-green-50 text-green-700 border-green-200 hover:border-green-400 hover:bg-white'
                   }`}>
-            <Gift className="w-3.5 h-3.5 mr-1 inline-block" /> Gratis Saja
+            <Gift weight="duotone" className="w-4 h-4 mr-1.5 inline-block" /> Gratis Saja
           </button>
         </div>
-        <div className="flex items-center justify-between pt-1 border-t border-gray-100">
-          <p className="text-xs text-gray-500">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <p className="text-xs text-gray-500 font-medium">
             {filtered.length === rides.length ? `${rides.length} tumpangan tersedia` : `${filtered.length} dari ${rides.length} tumpangan`}
           </p>
           {hasActiveFilters && (
-            <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
-              Hapus Filter <X className="w-3 h-3" />
+            <button onClick={clearFilters} className="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 transition-colors">
+              Hapus Filter <X weight="bold" className="w-3 h-3" />
             </button>
           )}
         </div>
@@ -396,21 +396,21 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
       {/* Ride Cards */}
       {filtered.length === 0 ? (
         <div className="bg-white p-10 rounded-xl shadow-sm border border-gray-200 text-center mt-2">
-          <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <MagnifyingGlass weight="duotone" className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-gray-700 mb-2">
             {rides.length === 0 ? 'Belum ada tumpangan tersedia saat ini' : 'Tidak ada tumpangan yang cocok'}
           </h3>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500 mb-6 text-sm">
             {rides.length === 0
               ? 'Tumpangan yang sudah lewat waktunya disembunyikan otomatis. Jadilah yang pertama menawarkan!'
               : 'Coba ubah kata pencarian atau hapus filter yang aktif.'}
           </p>
           {rides.length === 0 ? (
-            <a href="/offer-ride" className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition text-sm">
-              <PlusCircle className="w-4 h-4" /> Tawarkan Tumpangan
+            <a href="/offer-ride" className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition shadow-md">
+              <PlusCircle weight="bold" className="w-5 h-5" /> Tawarkan Tumpangan
             </a>
           ) : (
-            <button onClick={clearFilters} className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition text-sm">
+            <button onClick={clearFilters} className="inline-block bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm">
               Hapus Semua Filter
             </button>
           )}
@@ -430,80 +430,94 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
             const myRating = myRatings[ride.id] ?? null
 
             return (
-              <div key={ride.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition relative overflow-hidden">
+              <div key={ride.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition relative overflow-hidden group">
                 {isOwner && (
-                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">Tumpangan Anda</div>
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3.5 py-1.5 rounded-bl-xl shadow-sm">Tumpangan Anda</div>
                 )}
                 {!isOwner && isExpiringSoon && (
-                  <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg animate-pulse flex items-center gap-1">
-                    <Zap className="w-3 h-3" /> Segera Berangkat!
+                  <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-bl-xl shadow-sm animate-pulse flex items-center gap-1.5">
+                    <Lightning weight="fill" className="w-3.5 h-3.5" /> Segera Berangkat!
                   </div>
                 )}
 
-                <div className="flex justify-between items-start border-b pb-4 mb-4 mt-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex justify-between items-start border-b border-gray-100 pb-4 mb-4 mt-2">
+                  <div className="flex items-center gap-3.5">
                     {ride.profiles?.avatar_url ? (
-                      <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border"/>
+                      <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border border-gray-200"/>
                     ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-gray-400" />
+                      <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
+                        <User weight="duotone" className="w-6 h-6 text-gray-400" />
                       </div>
                     )}
                     <div>
-                      <p className="font-bold text-gray-800">{ride.profiles?.full_name}</p>
-                      <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">Pengemudi Terverifikasi</p>
-                      {ride.is_recurring && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-block mt-1 ml-1 items-center gap-1 w-max">
-                          <Repeat className="w-3 h-3" /> Rutin
-                        </span>
-                      )}
-                      <div className="mt-1">
+                      <p className="font-bold text-gray-800 text-lg leading-tight">{ride.profiles?.full_name}</p>
+                      <div className="flex items-center flex-wrap gap-2 mt-1.5">
+                        <span className="text-[11px] text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded-md border border-green-200">Terverifikasi</span>
+                        {ride.is_recurring && (
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1">
+                            <ArrowsClockwise weight="bold" className="w-3 h-3" /> Rutin
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5">
                         <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0}/>
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-xl font-black text-blue-600 tracking-tight">
                       {ride.price === 0 ? 'GRATIS' : `Rp ${ride.price.toLocaleString('id-ID')}`}
                     </p>
-                    <p className="text-sm text-gray-500">{ride.available_seats} Kursi Tersedia</p>
+                    <p className="text-sm text-gray-500 font-medium mt-0.5">{ride.available_seats} Kursi Tersedia</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <MapPin className="w-4 h-4 text-blue-500" />
-                      <p className="font-semibold text-gray-800">{highlight(ride.origin)}</p>
+                  <div className="space-y-2.5">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-50 p-1.5 rounded-md mt-0.5">
+                        <MapPin weight="duotone" className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium mb-0.5">Berangkat dari</p>
+                        <p className="font-bold text-gray-800">{highlight(ride.origin)}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Flag className="w-4 h-4 text-red-500" />
-                      <p className="font-semibold text-gray-800">{highlight(ride.destination)}</p>
+                    <div className="flex items-start gap-3">
+                      <div className="bg-red-50 p-1.5 rounded-md mt-0.5">
+                        <Flag weight="duotone" className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium mb-0.5">Tujuan ke</p>
+                        <p className="font-bold text-gray-800">{highlight(ride.destination)}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg border">
-                    <p className="text-sm text-gray-600 mb-1 flex items-center gap-2"><Calendar className="w-4 h-4" /> {tanggal}</p>
-                    <p className="text-sm text-gray-600 mb-1 flex items-center gap-2"><Clock className="w-4 h-4" /> {jam} WITA</p>
+                  <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100 flex flex-col justify-center">
+                    <p className="text-sm text-gray-700 mb-2 font-medium flex items-center gap-2.5">
+                      <CalendarBlank weight="duotone" className="w-5 h-5 text-gray-400" /> {tanggal}
+                    </p>
+                    <p className="text-sm text-gray-700 mb-1 font-medium flex items-center gap-2.5">
+                      <Clock weight="duotone" className="w-5 h-5 text-gray-400" /> {jam} WITA
+                    </p>
                     {ride.notes && (
-                      <p className="text-sm text-gray-500 italic mt-2 border-t pt-2">"{ride.notes}"</p>
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-sm text-gray-500 italic leading-relaxed">"{ride.notes}"</p>
+                      </div>
                     )}
                   </div>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t flex flex-wrap justify-center gap-2">
+                <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap justify-end gap-3">
                   {isOwner ? (
                     <form action={deleteRide} className="w-full md:w-auto">
                       <input type="hidden" name="rideId" value={ride.id}/>
-                      <button type="submit" className="bg-red-50 text-red-600 px-6 py-2 rounded-lg font-bold hover:bg-red-100 border border-red-200 w-full md:w-auto transition flex items-center justify-center gap-2 text-sm">
-                        <Trash2 className="w-4 h-4" /> Hapus
+                      <button type="submit" className="bg-red-50 text-red-600 px-6 py-2.5 rounded-lg font-bold hover:bg-red-100 border border-red-200 w-full md:w-auto transition-colors flex items-center justify-center gap-2 text-sm">
+                        <Trash weight="bold" className="w-4 h-4" /> Hapus Jadwal
                       </button>
                     </form>
                   ) : (
                     <>
-                      <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
-                         className="bg-green-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-600 flex-1 md:flex-none transition flex items-center justify-center gap-2 text-sm">
-                        <MessageCircle className="w-4 h-4" /> WhatsApp
-                      </a>
                       <button onClick={()=>setRatingModal({
                               rideId: ride.id,
                               driverId: ride.driver_id,
@@ -511,13 +525,17 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                               driverAvatar: ride.profiles?.avatar_url ?? null,
                               existing: myRating,
                             })}
-                            className={`px-4 py-2 rounded-lg font-bold text-sm border transition flex items-center gap-1 ${
+                            className={`px-5 py-2.5 rounded-lg font-bold text-sm border transition-all flex items-center justify-center gap-2 flex-1 md:flex-none ${
                               myRating
                               ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
-                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                             }`}>
-                        {myRating ? `★ ${myRating.score}/5` : '☆ Beri Ulasan'}
+                        {myRating ? `★ ${myRating.score}/5 Ulasan Anda` : '☆ Beri Ulasan'}
                       </button>
+                      <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
+                         className="bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-2.5 rounded-lg font-bold flex-1 md:flex-none transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                        <WhatsappLogo weight="fill" className="w-5 h-5" /> WhatsApp
+                      </a>
                     </>
                   )}
                 </div>
