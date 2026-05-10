@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import StarRatingModal from './StarRatingModal'
 import StarDisplay from './StarDisplay'
+// Impor ikon dari Lucide
+import { Target, User, Repeat, MapPin, Flag, Calendar, Clock, Search, Coins, Gift, Zap, Trash2, MessageCircle, PlusCircle, X } from 'lucide-react'
 
 type Ride = {
   id: string
@@ -53,17 +55,15 @@ type Props = {
 
 // ─────────────────────────────────────────────
 // RIDE MATCHING ALGORITHM
-// Scores each ride 0-100 against the user home address + time.
 // ─────────────────────────────────────────────
 type MatchResult = { score: number; reasons: string[] }
 
 function tokenize(text: string): Set<string> {
   return new Set(
-    text
-      .toLowerCase()
+    text.toLowerCase()
       .replace(/[^a-z0-9\s]/g, ' ')
       .split(/\s+/)
-      .filter((w) => w.length > 2)
+      .filter(w => w.length > 2)
   )
 }
 
@@ -72,8 +72,7 @@ function routeScore(ride: Ride, userAddress: string): number {
   const addrTokens = tokenize(userAddress)
   const origTokens = tokenize(ride.origin)
   const destTokens = tokenize(ride.destination)
-  let originHits = 0,
-    destHits = 0
+  let originHits = 0, destHits = 0
   for (const t of addrTokens) {
     if (origTokens.has(t)) originHits++
     if (destTokens.has(t)) destHits++
@@ -133,12 +132,11 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
   const [freeOnly, setFreeOnly] = useState(false)
   const [driverRatings, setDriverRatings] = useState<Record<string, DriverRating>>({})
 
-  // Top 3 matched rides for this user (excludes own rides, min score > 5)
   const matchedRides = useMemo(() => {
     return rides
-      .filter((r) => r.driver_id !== currentUserId)
-      .map((r) => ({ ride: r, ...scoreRide(r, userAddress) }))
-      .filter((r) => r.score > 5)
+      .filter(r => r.driver_id !== currentUserId)
+      .map(r => ({ ride: r, ...scoreRide(r, userAddress) }))
+      .filter(r => r.score > 5)
       .sort((a, b) => b.score - a.score)
       .slice(0, 3)
   }, [rides, currentUserId, userAddress])
@@ -147,7 +145,7 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
   const [ratingModal, setRatingModal] = useState<RatingModal | null>(null)
 
   useEffect(() => {
-    const driverIds = [...new Set(rides.map((r) => r.driver_id))]
+    const driverIds = [...new Set(rides.map(r => r.driver_id))]
     if (driverIds.length === 0) return
 
     const fetchRatings = async () => {
@@ -156,90 +154,72 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
         .select('driver_id, avg_score, total_ratings')
         .in('driver_id', driverIds)
 
-        if (drData) {
-            const map: Record<string, DriverRating> = {}
-            drData.forEach((r) => {
-                if (r.driver_id) {
-                    // RAKIT ULANG: Beri nilai fallback 0 jika dari database null
-                    map[r.driver_id] = {
-                        driver_id: r.driver_id,
-                        avg_score: r.avg_score ?? 0,
-                        total_ratings: r.total_ratings ?? 0,
-                    }
-                }
-            })
-            setDriverRatings(map)
-        }
+      if (drData) {
+        const map: Record<string, DriverRating> = {}
+        drData.forEach((r) => {
+          if (r.driver_id) {
+            // PERBAIKAN: Menjamin tidak ada data null yang masuk ke state
+            map[r.driver_id] = {
+              driver_id: r.driver_id,
+              avg_score: r.avg_score ?? 0,
+              total_ratings: r.total_ratings ?? 0,
+            }
+          }
+        })
+        setDriverRatings(map)
+      }
 
-        const rideIds = rides.map((r) => r.id)
-        const { data: myData } = await supabase
-            .from('ratings')
-            .select('ride_id, score, comment')
-            .eq('passenger_id', currentUserId)
-            .in('ride_id', rideIds)
+      const rideIds = rides.map(r => r.id)
+      const { data: myData } = await supabase
+        .from('ratings')
+        .select('ride_id, score, comment')
+        .eq('passenger_id', currentUserId)
+        .in('ride_id', rideIds)
 
-        if (myData) {
-            const map: Record<string, MyRating> = {}
-            myData.forEach((r) => {
-                // Pastikan ride_id dan score ada sebelum dirakit
-                if (r.ride_id && r.score !== null) {
-                    map[r.ride_id] = {
-                        ride_id: r.ride_id,
-                        score: r.score,
-                        comment: r.comment ?? null,
-                    }
-                }
-            })
-            setMyRatings(map)
-        }
+      if (myData) {
+        const map: Record<string, MyRating> = {}
+        myData.forEach((r) => {
+          if (r.ride_id && r.score !== null) {
+            map[r.ride_id] = {
+              ride_id: r.ride_id,
+              score: r.score,
+              comment: r.comment ?? null,
+            }
+          }
+        })
+        setMyRatings(map)
+      }
     }
 
     fetchRatings()
   }, [rides, currentUserId, supabase])
 
   const handleRatingSubmitted = (driverId: string, rideId: string, newScore: number) => {
-    setDriverRatings((prev) => {
+    setDriverRatings(prev => {
       const existing = prev[driverId]
       if (!existing) {
-        return {
-          ...prev,
-          [driverId]: { driver_id: driverId, avg_score: newScore, total_ratings: 1 },
-        }
+        return { ...prev, [driverId]: { driver_id: driverId, avg_score: newScore, total_ratings: 1 } }
       }
       const wasRated = !!myRatings[rideId]
       const total = wasRated ? existing.total_ratings : existing.total_ratings + 1
       const newAvg = wasRated
-        ? (existing.avg_score * existing.total_ratings - myRatings[rideId].score + newScore) / existing.total_ratings
-        : (existing.avg_score * existing.total_ratings + newScore) / total
-      return {
-        ...prev,
-        [driverId]: {
-          driver_id: driverId,
-          avg_score: Math.round(newAvg * 10) / 10,
-          total_ratings: total,
-        },
-      }
+        ? ((existing.avg_score * existing.total_ratings) - myRatings[rideId].score + newScore) / existing.total_ratings
+        : ((existing.avg_score * existing.total_ratings) + newScore) / total
+      return { ...prev, [driverId]: { driver_id: driverId, avg_score: Math.round(newAvg * 10) / 10, total_ratings: total } }
     })
-    setMyRatings((prev) => ({
-      ...prev,
-      [rideId]: { ride_id: rideId, score: newScore, comment: null },
-    }))
+    setMyRatings(prev => ({ ...prev, [rideId]: { ride_id: rideId, score: newScore, comment: null } }))
   }
 
   const filtered = useMemo(() => {
     let result = [...rides]
     if (search.trim()) {
       const q = search.trim().toLowerCase()
-      result = result.filter(
-        (r) => r.origin.toLowerCase().includes(q) || r.destination.toLowerCase().includes(q)
-      )
+      result = result.filter(r => r.origin.toLowerCase().includes(q) || r.destination.toLowerCase().includes(q))
     }
-    if (freeOnly) result = result.filter((r) => r.price === 0)
-    
+    if (freeOnly) result = result.filter(r => r.price === 0)
     if (sortBy === 'price_asc') result.sort((a, b) => a.price - b.price)
     else if (sortBy === 'price_desc') result.sort((a, b) => b.price - a.price)
     else result.sort((a, b) => new Date(a.departure_time).getTime() - new Date(b.departure_time).getTime())
-    
     return result
   }, [rides, search, sortBy, freeOnly])
 
@@ -259,9 +239,7 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
     return (
       <>
         {text.slice(0, idx)}
-        <mark className="bg-yellow-200 text-gray-900 rounded px-0.5">
-          {text.slice(idx, idx + q.length)}
-        </mark>
+        <mark className="bg-yellow-200 text-gray-900 rounded px-0.5">{text.slice(idx, idx + q.length)}</mark>
         {text.slice(idx + q.length)}
       </>
     )
@@ -269,11 +247,10 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
 
   return (
     <>
-      {/* ── Matched Rides Section ── */}
       {matchedRides.length > 0 && (
         <div className="mb-5">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🎯</span>
+            <Target className="w-6 h-6 text-indigo-500" />
             <h3 className="font-bold text-gray-800">Cocok untuk Anda</h3>
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
               Berdasarkan lokasi & waktu
@@ -290,33 +267,31 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
 
               return (
                 <div key={ride.id} className="bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex flex-col gap-3">
-                  {/* Driver + score */}
                   <div className="flex items-center gap-3">
                     <a href={`/driver/${ride.driver_id}`} className="shrink-0 hover:opacity-80 transition">
                       {ride.profiles?.avatar_url ? (
-                        <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border" />
+                        <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border"/>
                       ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl">👤</div>
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-gray-400" />
+                        </div>
                       )}
                     </a>
                     <div>
                       <a href={`/driver/${ride.driver_id}`} className="font-bold text-gray-800 hover:text-blue-600 transition">
                         {ride.profiles?.full_name}
                       </a>
-                      <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">
-                        Pengemudi Terverifikasi
-                      </p>
+                      <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">Pengemudi Terverifikasi</p>
                       {ride.is_recurring && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-block mt-1 ml-1">
-                          🔁 Rutin
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 mt-1 ml-1 flex items-center gap-1 w-max">
+                          <Repeat className="w-3 h-3" /> Rutin
                         </span>
                       )}
                       <div className="mt-1">
-                        <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0} />
+                        <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0}/>
                       </div>
                     </div>
                   </div>
-                  
                   <div className="text-right">
                     <p className="font-bold text-blue-700">
                       {ride.price === 0 ? 'GRATIS' : `Rp ${ride.price.toLocaleString('id-ID')}`}
@@ -324,21 +299,18 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                     <p className="text-xs text-gray-500">{ride.available_seats} kursi</p>
                   </div>
 
-                  {/* Route + time */}
                   <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <span className="text-blue-400">📍</span>
+                    <MapPin className="w-4 h-4 text-blue-500" />
                     <span className="font-semibold">{ride.origin}</span>
                     <span className="text-gray-400">→</span>
                     <span className="font-semibold">{ride.destination}</span>
                   </div>
-                  
                   <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span>📅 {tanggal}</span>
-                    <span>⏰ {jam} WITA</span>
-                    {ride.is_recurring && <span className="text-purple-600 font-semibold">🔁 Rutin</span>}
+                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {tanggal}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {jam} WITA</span>
+                    {ride.is_recurring && <span className="text-purple-600 font-semibold flex items-center gap-1"><Repeat className="w-3.5 h-3.5" /> Rutin</span>}
                   </div>
 
-                  {/* Match reason tags */}
                   {reasons.length > 0 && (
                     <div className="flex gap-1 flex-wrap">
                       {reasons.map((r, i) => (
@@ -352,23 +324,18 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                     </div>
                   )}
 
-                  {/* WhatsApp CTA */}
-                  <a
-                    href={`https://wa.me/${waNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 rounded-lg text-center transition flex items-center justify-center gap-2"
-                  >
-                    💬 Hubungi via WhatsApp
+                  <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
+                     className="w-full bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 rounded-lg text-center transition flex items-center justify-center gap-2">
+                    <MessageCircle className="w-4 h-4" /> Hubungi via WhatsApp
                   </a>
                 </div>
               )
             })}
           </div>
           <div className="flex items-center gap-2 mt-4 mb-1">
-            <hr className="flex-1 border-gray-200" />
+            <hr className="flex-1 border-gray-200"/>
             <span className="text-xs text-gray-400 whitespace-nowrap">Semua Tumpangan</span>
-            <hr className="flex-1 border-gray-200" />
+            <hr className="flex-1 border-gray-200"/>
           </div>
         </div>
       )}
@@ -376,62 +343,51 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
       {/* Search & Filter Bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 space-y-3">
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari asal atau tujuan... (cth: Singaraja, Denpasar)"
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input type="text"
+                 value={search}
+                 onChange={e=>setSearch(e.target.value)}
+                 placeholder="Cari asal atau tujuan... (cth: Singaraja)"
+                 className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
           {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none"
-            >
-              ×
+            <button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-gray-500 mr-1">Urutkan:</span>
           {([
-            { value: 'time', label: '⏰ Waktu Terdekat' },
-            { value: 'price_asc', label: '💰 Harga Termurah' },
-            { value: 'price_desc', label: '💰 Harga Termahal' },
-          ] as const).map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setSortBy(opt.value)}
-              className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition ${
-                sortBy === opt.value
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-              }`}
-            >
-              {opt.label}
+            { value: 'time',       label: 'Waktu Terdekat', icon: <Clock className="w-3.5 h-3.5 mr-1 inline-block" /> },
+            { value: 'price_asc',  label: 'Harga Termurah', icon: <Coins className="w-3.5 h-3.5 mr-1 inline-block" /> },
+            { value: 'price_desc', label: 'Harga Termahal', icon: <Coins className="w-3.5 h-3.5 mr-1 inline-block" /> },
+          ] as const).map(opt => (
+            <button key={opt.value}
+                    onClick={()=>setSortBy(opt.value)}
+                    className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition ${
+                      sortBy===opt.value
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                    }`}>
+              {opt.icon} {opt.label}
             </button>
           ))}
-          <button
-            onClick={() => setFreeOnly(!freeOnly)}
-            className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition ml-auto ${
-              freeOnly
-                ? 'bg-green-600 text-white border-green-600'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
-            }`}
-          >
-            🎁 Gratis Saja
+          <button onClick={()=>setFreeOnly(!freeOnly)}
+                  className={`text-xs px-3 py-1.5 rounded-full font-semibold border transition ml-auto ${
+                    freeOnly
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                  }`}>
+            <Gift className="w-3.5 h-3.5 mr-1 inline-block" /> Gratis Saja
           </button>
         </div>
         <div className="flex items-center justify-between pt-1 border-t border-gray-100">
           <p className="text-xs text-gray-500">
-            {filtered.length === rides.length
-              ? `${rides.length} tumpangan tersedia`
-              : `${filtered.length} dari ${rides.length} tumpangan`}
+            {filtered.length === rides.length ? `${rides.length} tumpangan tersedia` : `${filtered.length} dari ${rides.length} tumpangan`}
           </p>
           {hasActiveFilters && (
-            <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-800 font-semibold">
-              Hapus Filter ×
+            <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+              Hapus Filter <X className="w-3 h-3" />
             </button>
           )}
         </div>
@@ -440,7 +396,7 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
       {/* Ride Cards */}
       {filtered.length === 0 ? (
         <div className="bg-white p-10 rounded-xl shadow-sm border border-gray-200 text-center mt-2">
-          <div className="text-5xl mb-4">🔍</div>
+          <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-gray-700 mb-2">
             {rides.length === 0 ? 'Belum ada tumpangan tersedia saat ini' : 'Tidak ada tumpangan yang cocok'}
           </h3>
@@ -450,8 +406,8 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
               : 'Coba ubah kata pencarian atau hapus filter yang aktif.'}
           </p>
           {rides.length === 0 ? (
-            <a href="/offer-ride" className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition text-sm">
-              ➕ Tawarkan Tumpangan
+            <a href="/offer-ride" className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 transition text-sm">
+              <PlusCircle className="w-4 h-4" /> Tawarkan Tumpangan
             </a>
           ) : (
             <button onClick={clearFilters} className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition text-sm">
@@ -470,42 +426,39 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
             
             let waNumber = ride.profiles?.phone_number.replace(/[^0-9]/g, '') || ''
             if (waNumber.startsWith('0')) waNumber = '62' + waNumber.substring(1)
-            
             const driverRating = driverRatings[ride.driver_id] ?? null
             const myRating = myRatings[ride.id] ?? null
 
             return (
               <div key={ride.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition relative overflow-hidden">
                 {isOwner && (
-                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">
-                    Tumpangan Anda
-                  </div>
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">Tumpangan Anda</div>
                 )}
                 {!isOwner && isExpiringSoon && (
-                  <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg animate-pulse">
-                    ⚡ Segera Berangkat!
+                  <div className="absolute top-0 right-0 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg animate-pulse flex items-center gap-1">
+                    <Zap className="w-3 h-3" /> Segera Berangkat!
                   </div>
                 )}
 
                 <div className="flex justify-between items-start border-b pb-4 mb-4 mt-2">
                   <div className="flex items-center gap-3">
                     {ride.profiles?.avatar_url ? (
-                      <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border" />
+                      <img src={ride.profiles.avatar_url} alt="Driver" className="w-12 h-12 rounded-full object-cover border"/>
                     ) : (
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl">👤</div>
+                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                        <User className="w-6 h-6 text-gray-400" />
+                      </div>
                     )}
                     <div>
                       <p className="font-bold text-gray-800">{ride.profiles?.full_name}</p>
-                      <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">
-                        Pengemudi Terverifikasi
-                      </p>
+                      <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full inline-block mt-1">Pengemudi Terverifikasi</p>
                       {ride.is_recurring && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-block mt-1 ml-1">
-                          🔁 Rutin
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 inline-block mt-1 ml-1 items-center gap-1 w-max">
+                          <Repeat className="w-3 h-3" /> Rutin
                         </span>
                       )}
                       <div className="mt-1">
-                        <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0} />
+                        <StarDisplay avgScore={driverRating?.avg_score ?? null} totalRatings={driverRating?.total_ratings ?? 0}/>
                       </div>
                     </div>
                   </div>
@@ -520,55 +473,49 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-blue-500">📍</span>
+                      <MapPin className="w-4 h-4 text-blue-500" />
                       <p className="font-semibold text-gray-800">{highlight(ride.origin)}</p>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-red-500">🏁</span>
+                      <Flag className="w-4 h-4 text-red-500" />
                       <p className="font-semibold text-gray-800">{highlight(ride.destination)}</p>
                     </div>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg border">
-                    <p className="text-sm text-gray-600 mb-1">📅 {tanggal}</p>
-                    <p className="text-sm text-gray-600 mb-1">⏰ {jam} WITA</p>
-                    {ride.notes && <p className="text-sm text-gray-500 italic mt-2 border-t pt-2">"{ride.notes}"</p>}
+                    <p className="text-sm text-gray-600 mb-1 flex items-center gap-2"><Calendar className="w-4 h-4" /> {tanggal}</p>
+                    <p className="text-sm text-gray-600 mb-1 flex items-center gap-2"><Clock className="w-4 h-4" /> {jam} WITA</p>
+                    {ride.notes && (
+                      <p className="text-sm text-gray-500 italic mt-2 border-t pt-2">"{ride.notes}"</p>
+                    )}
                   </div>
                 </div>
                 
                 <div className="mt-4 pt-4 border-t flex flex-wrap justify-center gap-2">
                   {isOwner ? (
                     <form action={deleteRide} className="w-full md:w-auto">
-                      <input type="hidden" name="rideId" value={ride.id} />
+                      <input type="hidden" name="rideId" value={ride.id}/>
                       <button type="submit" className="bg-red-50 text-red-600 px-6 py-2 rounded-lg font-bold hover:bg-red-100 border border-red-200 w-full md:w-auto transition flex items-center justify-center gap-2 text-sm">
-                        🗑️ Hapus
+                        <Trash2 className="w-4 h-4" /> Hapus
                       </button>
                     </form>
                   ) : (
                     <>
-                      <a
-                        href={`https://wa.me/${waNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-green-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-600 flex-1 md:flex-none transition flex items-center justify-center gap-2 text-sm"
-                      >
-                        💬 WhatsApp
+                      <a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer"
+                         className="bg-green-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-600 flex-1 md:flex-none transition flex items-center justify-center gap-2 text-sm">
+                        <MessageCircle className="w-4 h-4" /> WhatsApp
                       </a>
-                      <button
-                        onClick={() =>
-                          setRatingModal({
-                            rideId: ride.id,
-                            driverId: ride.driver_id,
-                            driverName: ride.profiles?.full_name ?? 'Pengemudi',
-                            driverAvatar: ride.profiles?.avatar_url ?? null,
-                            existing: myRating,
-                          })
-                        }
-                        className={`px-4 py-2 rounded-lg font-bold text-sm border transition flex items-center gap-1 ${
-                          myRating
-                            ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
-                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-                        }`}
-                      >
+                      <button onClick={()=>setRatingModal({
+                              rideId: ride.id,
+                              driverId: ride.driver_id,
+                              driverName: ride.profiles?.full_name ?? 'Pengemudi',
+                              driverAvatar: ride.profiles?.avatar_url ?? null,
+                              existing: myRating,
+                            })}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm border transition flex items-center gap-1 ${
+                              myRating
+                              ? 'bg-yellow-50 text-yellow-700 border-yellow-300 hover:bg-yellow-100'
+                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                            }`}>
                         {myRating ? `★ ${myRating.score}/5` : '☆ Beri Ulasan'}
                       </button>
                     </>
@@ -588,7 +535,7 @@ export default function RideList({ rides, currentUserId, userAddress, deleteRide
           driverName={ratingModal.driverName}
           driverAvatar={ratingModal.driverAvatar}
           existingRating={ratingModal.existing}
-          onClose={() => setRatingModal(null)}
+          onClose={()=>setRatingModal(null)}
           onSubmitted={(score) => {
             handleRatingSubmitted(ratingModal.driverId, ratingModal.rideId, score)
             setRatingModal(null)

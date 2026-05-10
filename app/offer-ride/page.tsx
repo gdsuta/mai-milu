@@ -8,22 +8,24 @@ import Navbar from '@/components/Navbar'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+// Impor ikon profesional dari Lucide
+import { MapPin, Flag, Calculator, Repeat, Calendar, Clock, Users, Fuel, FileText, CheckCircle2, Loader2, X } from 'lucide-react'
 
-// ── 1. DEFINISI SKEMA ZOD ───────────────────────────────────────────
 const rideSchema = z.object({
   origin: z.string().min(3, "Lokasi asal minimal 3 karakter"),
   destination: z.string().min(3, "Tujuan akhir minimal 3 karakter"),
-  departureDate: z.string().optional(), // Secara manual divalidasi nanti jika bukan rutin
+  departureDate: z.string().optional(),
   departureTime: z.string().min(1, "Jam wajib diisi"),
-  availableSeats: z.number({ message: "Wajib angka" }).min(1, "Minimal 1 kursi").max(10, "Maksimal 10 kursi"),
-  price: z.number({ message: "Wajib angka" }).min(0, "Harga tidak boleh minus"),
+  
+  // PERBAIKAN: Gunakan z.number() biasa karena input sudah valueAsNumber: true
+  availableSeats: z.number({ message: "Wajib diisi angka" }).min(1, "Minimal 1 kursi").max(10, "Maksimal 10 kursi"),
+  price: z.number({ message: "Wajib diisi angka" }).min(0, "Harga tidak boleh minus"),
+  
   notes: z.string().optional()
 })
 
-// Ekstraksi Tipe Data secara otomatis dari Skema Zod
 type RideFormValues = z.infer<typeof rideSchema>
 
-// Konfigurasi hari untuk jadwal rutin
 const DAYS = [
   { id: 'Sen', label: 'Sen', jsDay: 1 },
   { id: 'Sel', label: 'Sel', jsDay: 2 },
@@ -70,18 +72,13 @@ export default function OfferRidePage() {
   const [isCalculating, setIsCalculating] = useState(false)
   const [distanceKm, setDistanceKm] = useState<number | null>(null)
 
-  // State khusus UI yang tidak ditangani Zod
   const [isRecurring, setIsRecurring] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>(['Sen', 'Sel', 'Rab', 'Kam', 'Jum'])
   const [weeksAhead, setWeeksAhead] = useState(4)
 
-  // ── 2. INSTALASI REACT HOOK FORM + ZOD ────────────────────────────
   const { register, handleSubmit, setValue, getValues, formState: { errors } } = useForm<RideFormValues>({
     resolver: zodResolver(rideSchema),
     defaultValues: {
-      origin: '',
-      destination: '',
-      departureTime: '',
       availableSeats: 1,
       price: 0,
       notes: ''
@@ -113,7 +110,6 @@ export default function OfferRidePage() {
   const recurringRideCount = isRecurring ? selectedDays.length * weeksAhead : 1
 
   const handleCalculateDistance = async () => {
-    // RHF: Mengambil nilai secara live tanpa re-render keseluruhan
     const origin = getValues('origin')
     const destination = getValues('destination')
     
@@ -152,7 +148,6 @@ export default function OfferRidePage() {
       }
       setDistanceKm(distanceInKm)
       
-      // RHF: Menyuntikkan hasil harga ke dalam form dan langsung memvalidasinya
       setValue('price', Math.round(distanceInKm * 1000 / 5000) * 5000, { shouldValidate: true })
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Terjadi kesalahan'
@@ -162,7 +157,6 @@ export default function OfferRidePage() {
     }
   }
 
-  // ── 3. FUNGSI SUBMIT (Hanya akan dipanggil RHF jika Zod meloloskan data)
   const onSubmitForm = async (values: RideFormValues) => {
     if (!userProfile?.id) {
       alert('Profil pengguna belum dimuat. Coba refresh halaman.')
@@ -258,16 +252,18 @@ export default function OfferRidePage() {
 
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Tawarkan Tumpangan</h1>
-            <Link href="/home" className="text-gray-500 hover:text-red-500 text-sm font-bold bg-gray-100 px-3 py-1 rounded-lg">✕ Batal</Link>
+            <Link href="/home" className="text-gray-500 hover:text-red-500 text-sm font-bold bg-gray-100 px-3 py-1 rounded-lg flex items-center gap-1 transition">
+              <X className="w-4 h-4" /> Batal
+            </Link>
           </div>
 
-          {/* PERHATIAN: Form sekarang dibungkus oleh handleSubmit dari RHF */}
           <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col gap-5">
 
-            {/* Origin + Destination */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="text-sm font-semibold text-gray-700">📍 Berangkat Dari</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-blue-500" /> Berangkat Dari
+                </label>
                 <input type="text" {...register('origin')}
                   className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.origin ? 'border-red-500' : 'border-gray-300'}`} 
                   placeholder="Cth: Sangsit" 
@@ -275,7 +271,9 @@ export default function OfferRidePage() {
                 {errors.origin && <p className="text-red-500 text-xs mt-1">{errors.origin.message}</p>}
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700">🏁 Tujuan Akhir</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Flag className="w-4 h-4 text-red-500" /> Tujuan Akhir
+                </label>
                 <input type="text" {...register('destination')}
                   className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.destination ? 'border-red-500' : 'border-gray-300'}`} 
                   placeholder="Cth: Rendang" 
@@ -284,7 +282,6 @@ export default function OfferRidePage() {
               </div>
             </div>
 
-            {/* Distance calculator */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-sm text-blue-800">
                 {distanceKm
@@ -293,18 +290,20 @@ export default function OfferRidePage() {
                 }
               </div>
               <button type="button" onClick={handleCalculateDistance} disabled={isCalculating}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:bg-gray-400 whitespace-nowrap w-full sm:w-auto shadow-sm">
-                {isCalculating ? 'Menghitung...' : '🗺️ Hitung Jarak'}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:bg-gray-400 whitespace-nowrap w-full sm:w-auto shadow-sm flex items-center justify-center gap-2">
+                {isCalculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
+                {isCalculating ? 'Menghitung...' : 'Hitung Jarak'}
               </button>
             </div>
 
             <hr className="my-1" />
 
-            {/* ── Recurring toggle ── */}
             <div className="bg-purple-50 border border-purple-100 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-purple-800">🔁 Jadwal Rutin</p>
+                  <p className="text-sm font-bold text-purple-800 flex items-center gap-1.5">
+                    <Repeat className="w-4 h-4" /> Jadwal Rutin
+                  </p>
                   <p className="text-xs text-purple-600 mt-0.5">Aktifkan untuk membuat jadwal berulang setiap minggu.</p>
                 </div>
                 <button
@@ -359,9 +358,9 @@ export default function OfferRidePage() {
                   </div>
 
                   {selectedDays.length > 0 && (
-                    <div className="bg-purple-100 rounded-lg px-3 py-2 text-xs text-purple-800 font-semibold">
-                      🗓️ Akan membuat <span className="text-base font-black">{recurringRideCount}</span> jadwal tumpangan
-                      ({selectedDays.join(', ')} × {weeksAhead} minggu)
+                    <div className="bg-purple-100 rounded-lg px-3 py-2 text-xs text-purple-800 font-semibold flex items-center gap-2">
+                      <Calendar className="w-4 h-4" /> 
+                      <span>Akan membuat <span className="font-black">{recurringRideCount}</span> jadwal tumpangan ({selectedDays.join(', ')} × {weeksAhead} minggu)</span>
                     </div>
                   )}
                 </div>
@@ -370,11 +369,12 @@ export default function OfferRidePage() {
 
             <hr className="my-1" />
 
-            {/* Date + Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {!isRecurring && (
                 <div>
-                  <label className="text-sm font-semibold text-gray-700">📅 Tanggal</label>
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-gray-500" /> Tanggal
+                  </label>
                   <input type="date" min={new Date().toISOString().split('T')[0]} {...register('departureDate')}
                     className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.departureDate ? 'border-red-500' : 'border-gray-300'}`} 
                   />
@@ -382,7 +382,9 @@ export default function OfferRidePage() {
                 </div>
               )}
               <div className={isRecurring ? 'md:col-span-2' : ''}>
-                <label className="text-sm font-semibold text-gray-700">⏰ Jam (WITA)</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-gray-500" /> Jam (WITA)
+                </label>
                 <input type="time" {...register('departureTime')}
                   className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.departureTime ? 'border-red-500' : 'border-gray-300'}`} 
                 />
@@ -395,17 +397,20 @@ export default function OfferRidePage() {
 
             <hr className="my-1" />
 
-            {/* Seats + Price */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="text-sm font-semibold text-gray-700">💺 Kursi Kosong</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-gray-500" /> Kursi Kosong
+                </label>
                 <input type="number" {...register('availableSeats', { valueAsNumber: true })}
                   className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.availableSeats ? 'border-red-500' : 'border-gray-300'}`} 
                 />
                 {errors.availableSeats && <p className="text-red-500 text-xs mt-1">{errors.availableSeats.message}</p>}
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-700">⛽ Uang Bensin (Rp)</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Fuel className="w-4 h-4 text-gray-500" /> Uang Bensin (Rp)
+                </label>
                 <input type="number" step="1000" {...register('price', { valueAsNumber: true })}
                   className={`w-full border p-2 rounded-lg mt-1 text-gray-900 bg-green-50 focus:ring-2 focus:ring-green-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`} 
                 />
@@ -413,9 +418,10 @@ export default function OfferRidePage() {
               </div>
             </div>
 
-            {/* Notes */}
             <div>
-              <label className="text-sm font-semibold text-gray-700">📝 Catatan Tambahan</label>
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-gray-500" /> Catatan Tambahan
+              </label>
               <textarea {...register('notes')}
                 className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900"
                 placeholder="Titik kumpul yang lebih spesifik..." rows={2} 
@@ -423,11 +429,19 @@ export default function OfferRidePage() {
             </div>
 
             <button type="submit" disabled={loading || (isRecurring && selectedDays.length === 0)}
-              className="w-full bg-green-600 text-white font-bold p-3 rounded-lg mt-2 hover:bg-green-700 disabled:bg-gray-400 shadow-md">
+              className="w-full bg-green-600 text-white font-bold p-3 rounded-lg mt-2 hover:bg-green-700 disabled:bg-gray-400 shadow-md flex items-center justify-center gap-2 transition-all">
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isRecurring ? (
+                <Repeat className="w-5 h-5" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5" />
+              )}
+              
               {loading
                 ? 'Menyimpan Jadwal...'
                 : isRecurring
-                  ? `🔁 Publikasikan ${recurringRideCount} Jadwal Rutin`
+                  ? `Publikasikan ${recurringRideCount} Jadwal Rutin`
                   : 'Publikasikan Tumpangan'
               }
             </button>
