@@ -22,32 +22,40 @@ export default function Navbar({ userName, avatarUrl, showAdminLink }: NavbarPro
     router.push('/login')
   }
 
+  // Mengambil nama depan untuk sapaan (opsional, jika ingin lebih singkat)
+  const firstName = userName ? userName.split(' ')[0] : ''
+
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 text-gray-800 shadow-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
         
-        {/* Logo & Judul */}
+        {/* Logo & Judul / Nama Pengguna */}
         <Link href="/home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          {/* PERBAIKAN: Menghapus 'hidden sm:block' agar logo selalu muncul */}
-          <div className="bg-indigo-50 rounded-full p-0.5 shadow-sm border border-indigo-100">
+          <div className="bg-indigo-50 rounded-full p-0.5 shadow-sm border border-indigo-100 shrink-0">
             <Image src="/logo.png" alt="Mai-Milu" width={36} height={36} className="rounded-full" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col justify-center">
             <h1 className="font-black text-xl leading-none tracking-tight text-indigo-700">Mai-Milu</h1>
-            <p className="text-[9px] text-indigo-400 font-bold tracking-wider mt-0.5 uppercase hidden sm:block">Bali Carpool</p>
+            {userName ? (
+              <p className="text-[11px] text-indigo-500 font-bold mt-0.5 truncate max-w-30 sm:max-w-50">
+                Halo, {firstName}
+              </p>
+            ) : (
+              <p className="text-[9px] text-indigo-400 font-bold tracking-wider mt-0.5 uppercase hidden sm:block">
+                Bali Carpool
+              </p>
+            )}
           </div>
         </Link>
 
         {/* Profil & Aksi */}
         <div className="flex items-center gap-3 sm:gap-5">
           
-          {/* PERBAIKAN: Tautan Tumpangan Saya Dikembalikan! */}
           <Link href="/my-rides" className={`flex items-center gap-1.5 text-sm font-bold transition-colors ${pathname === '/my-rides' ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}>
             <CarProfile weight={pathname === '/my-rides' ? "fill" : "duotone"} className="w-6 h-6 sm:w-5 sm:h-5" />
             <span className="hidden sm:inline">Tumpangan Saya</span>
           </Link>
 
-          {/* Tautan Admin */}
           {showAdminLink && (
             <Link href="/admin" className={`flex items-center gap-1.5 text-sm font-bold transition-colors ${pathname === '/admin' ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}>
               <ShieldCheck weight={pathname === '/admin' ? "fill" : "duotone"} className="w-6 h-6 sm:w-5 sm:h-5" /> 
@@ -56,16 +64,14 @@ export default function Navbar({ userName, avatarUrl, showAdminLink }: NavbarPro
           )}
           
           <div className="flex items-center gap-2.5 pl-2 sm:pl-4 border-l border-gray-200">
-            {/* Avatar Pengguna */}
             {avatarUrl ? (
-              <img src={avatarUrl} alt={userName || "User"} className="w-9 h-9 rounded-full object-cover border border-indigo-200 shadow-sm" />
+              <img src={avatarUrl} alt={userName || "User"} className="w-9 h-9 rounded-full object-cover border border-indigo-200 shadow-sm shrink-0" />
             ) : (
-              <div className="w-9 h-9 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 shadow-sm">
+              <div className="w-9 h-9 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 shadow-sm shrink-0">
                 <User weight="duotone" className="w-5 h-5 text-indigo-400" />
               </div>
             )}
             
-            {/* Tombol Keluar (Hanya Icon di Mobile) */}
             <button 
               onClick={handleLogout} 
               className="bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 p-2 sm:px-4 sm:py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 border border-gray-200 hover:border-red-200"

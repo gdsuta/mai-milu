@@ -2,13 +2,14 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Navbar from '@/components/Navbar'
 import MyRidesList from '@/components/MyRidesList'
-import { createServer } from '@/lib/supabase/server' // <-- Impor rumus induk server kita
+import { createServer } from '@/lib/supabase/server'
+// Impor ikon Phosphor khusus untuk Server Component
+import { House, CarProfile, PlusCircle } from '@phosphor-icons/react/dist/ssr'
 
 export default async function MyRidesPage() {
-  const supabase = await createServer() // Sangat ringkas!
+  const supabase = await createServer()
 
   const { data: { user } } = await supabase.auth.getUser()
-  // Pengecekan !user dihapus karena Middleware sudah menendang pengguna yang belum login
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -16,19 +17,17 @@ export default async function MyRidesPage() {
     .eq('id', user!.id)
     .single()
 
-  // Middleware tidak mengecek status verifikasi (hanya mengecek login), jadi ini tetap dipertahankan
   if (profile?.verification_status !== 'verified') redirect('/verification')
 
-  // Fetch ALL of the driver's rides (all statuses, all times)
   const { data: rides } = await supabase
     .from('rides')
-    .select('id, origin, destination, departure_time, available_seats, price, notes, status, created_at')
+    .select('id, origin, destination, departure_time, available_seats, price, notes, status, created_at, is_recurring, recurring_days')
     .eq('driver_id', user!.id)
     .order('departure_time', { ascending: false })
 
   async function updateRideStatus(formData: FormData) {
     'use server'
-    const supabaseServer = await createServer() // Sangat ringkas!
+    const supabaseServer = await createServer()
     const rideId = formData.get('rideId') as string
     const newStatus = formData.get('status') as string
     await supabaseServer.from('rides').update({ status: newStatus }).eq('id', rideId)
@@ -37,7 +36,7 @@ export default async function MyRidesPage() {
 
   async function deleteRide(formData: FormData) {
     'use server'
-    const supabaseServer = await createServer() // Sangat ringkas!
+    const supabaseServer = await createServer()
     const rideId = formData.get('rideId') as string
     await supabaseServer.from('rides').delete().eq('id', rideId)
     revalidatePath('/my-rides')
@@ -50,23 +49,30 @@ export default async function MyRidesPage() {
 		avatarUrl={profile?.avatar_url ?? undefined} 
 		showAdminLink={profile?.role === 'admin'} 
 		/>
-      <div className="min-h-screen bg-gray-100 pb-12 pt-6">
+      <div className="min-h-screen bg-gray-50 pb-12 pt-6">
         <main className="max-w-3xl mx-auto p-4 mt-2">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+          
+          {/* PERBAIKAN: Header yang responsif di Mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <a
                 href="/home"
-                className="text-gray-500 hover:text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium shadow-sm transition flex items-center gap-1"
+                className="text-gray-500 hover:text-indigo-600 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2 self-start sm:self-auto"
               >
-                ← Beranda
+                <House weight="duotone" className="w-5 h-5" /> Beranda
               </a>
-              <h1 className="text-2xl font-bold text-gray-800">🚗 Tumpangan Saya</h1>
+              <h1 className="text-3xl font-black text-blue-900 tracking-tight flex items-center gap-2.5 mt-2 sm:mt-0">
+                <div className="bg-indigo-100 p-2 rounded-xl">
+                  <CarProfile weight="duotone" className="w-7 h-7 text-indigo-600" />
+                </div>
+                Tumpangan Saya
+              </h1>
             </div>
             <a
               href="/offer-ride"
-              className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-green-700 transition text-sm flex items-center gap-1"
+              className="bg-linear-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:from-indigo-700 hover:to-blue-700 transition-all text-sm flex items-center justify-center gap-2 shadow-md w-full sm:w-auto"
             >
-              ➕ Tambah
+              <PlusCircle weight="bold" className="w-5 h-5" /> Tawarkan Baru
             </a>
           </div>
 
