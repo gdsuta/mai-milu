@@ -133,14 +133,14 @@ export default async function AdminDashboard(props: Props) {
             {verifiedUsers.map((u) => (
               <div key={u.id} className="bg-white rounded-lg shadow-sm border p-4 flex flex-row items-center gap-3">
                 {u.avatar_url
-                  ? <img src={u.avatar_url} alt={u.full_name ?? "User avatar"} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                  : <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm flex-shrink-0">👤</div>
+                  ? <img src={u.avatar_url} alt={u.full_name ?? "User avatar"} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  : <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-sm shrink-0">👤</div>
                 }
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-gray-800 truncate">{u.full_name}</p>
                   <p className="text-sm text-gray-500 truncate">📞 {u.phone_number}</p>
                 </div>
-                <form action={revokeAccess} className="flex-shrink-0">
+                <form action={revokeAccess} className="shrink-0">
                   <input type="hidden" name="userId" value={u.id} />
                   <button type="submit" className="text-red-500 hover:text-red-700 text-sm font-bold bg-red-50 px-3 py-2 rounded-lg border border-red-200 whitespace-nowrap">
                     Cabut Akses

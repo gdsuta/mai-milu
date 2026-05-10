@@ -5,8 +5,25 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-// Day-of-week config for the recurring picker
+// ── 1. DEFINISI SKEMA ZOD ───────────────────────────────────────────
+const rideSchema = z.object({
+  origin: z.string().min(3, "Lokasi asal minimal 3 karakter"),
+  destination: z.string().min(3, "Tujuan akhir minimal 3 karakter"),
+  departureDate: z.string().optional(), // Secara manual divalidasi nanti jika bukan rutin
+  departureTime: z.string().min(1, "Jam wajib diisi"),
+  availableSeats: z.number({ message: "Wajib angka" }).min(1, "Minimal 1 kursi").max(10, "Maksimal 10 kursi"),
+  price: z.number({ message: "Wajib angka" }).min(0, "Harga tidak boleh minus"),
+  notes: z.string().optional()
+})
+
+// Ekstraksi Tipe Data secara otomatis dari Skema Zod
+type RideFormValues = z.infer<typeof rideSchema>
+
+// Konfigurasi hari untuk jadwal rutin
 const DAYS = [
   { id: 'Sen', label: 'Sen', jsDay: 1 },
   { id: 'Sel', label: 'Sel', jsDay: 2 },
@@ -15,15 +32,12 @@ const DAYS = [
   { id: 'Jum', label: 'Jum', jsDay: 5 },
 ]
 
-// Given a departure time string and a target JS day-of-week (1=Mon…5=Fri),
-// returns the ISO date string of the next occurrence of that day from today.
 function nextDateForDay(jsDay: number, timeStr: string): string | null {
   const now = new Date()
-  const today = now.getDay() // 0=Sun…6=Sat
+  const today = now.getDay()
   let daysAhead = jsDay - today
   if (daysAhead <= 0) daysAhead += 7
 
-  // If today IS that day but departure time has already passed, skip to next week
   if (daysAhead === 7) {
     const [h, m] = timeStr.split(':').map(Number)
     const departureToday = new Date()
@@ -36,7 +50,6 @@ function nextDateForDay(jsDay: number, timeStr: string): string | null {
   return date.toISOString().split('T')[0]
 }
 
-// Generate all dates for a given JS day over the next N weeks from startDate
 function getDatesForDay(jsDay: number, weeksAhead: number, startDate: string): string[] {
   const dates: string[] = []
   const start = new Date(startDate + 'T00:00:00')
@@ -57,14 +70,22 @@ export default function OfferRidePage() {
   const [isCalculating, setIsCalculating] = useState(false)
   const [distanceKm, setDistanceKm] = useState<number | null>(null)
 
-  // Recurring state
+  // State khusus UI yang tidak ditangani Zod
   const [isRecurring, setIsRecurring] = useState(false)
   const [selectedDays, setSelectedDays] = useState<string[]>(['Sen', 'Sel', 'Rab', 'Kam', 'Jum'])
   const [weeksAhead, setWeeksAhead] = useState(4)
 
-  const [formData, setFormData] = useState({
-    origin: '', destination: '', departureDate: '', departureTime: '',
-    availableSeats: 1, price: 0, notes: ''
+  // ── 2. INSTALASI REACT HOOK FORM + ZOD ────────────────────────────
+  const { register, handleSubmit, setValue, getValues, formState: { errors } } = useForm<RideFormValues>({
+    resolver: zodResolver(rideSchema),
+    defaultValues: {
+      origin: '',
+      destination: '',
+      departureTime: '',
+      availableSeats: 1,
+      price: 0,
+      notes: ''
+    }
   })
 
   useEffect(() => {
@@ -72,7 +93,12 @@ export default function OfferRidePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('id, full_name, avatar_url, role').eq('id', user.id).single()
-        if (profile) setUserProfile({id: profile.id, fullName: profile.full_name ?? "Pengguna Tanpa Nama",avatarUrl: profile.avatar_url,role: profile.role ?? "user"})
+        if (profile) setUserProfile({ 
+          id: profile.id, 
+          fullName: profile.full_name ?? "Pengguna Tanpa Nama", 
+          avatarUrl: profile.avatar_url, 
+          role: profile.role ?? "user" 
+        })
       }
     }
     getUserProfile()
@@ -84,16 +110,18 @@ export default function OfferRidePage() {
     )
   }
 
-  // Count how many rides will be created for the preview
-  const recurringRideCount = isRecurring
-    ? selectedDays.length * weeksAhead
-    : 1
+  const recurringRideCount = isRecurring ? selectedDays.length * weeksAhead : 1
 
   const handleCalculateDistance = async () => {
-    if (!formData.origin || !formData.destination) {
+    // RHF: Mengambil nilai secara live tanpa re-render keseluruhan
+    const origin = getValues('origin')
+    const destination = getValues('destination')
+    
+    if (!origin || !destination) {
       alert('Silakan isi lokasi Asal dan Tujuan terlebih dahulu!')
       return
     }
+    
     setIsCalculating(true)
     setDistanceKm(null)
     const apiKey = process.env.NEXT_PUBLIC_ORS_API_KEY
@@ -105,8 +133,8 @@ export default function OfferRidePage() {
         if (data && data.length > 0) return [parseFloat(data[0].lon), parseFloat(data[0].lat)]
         throw new Error(`Titik lokasi "${place}" tidak ditemukan. Coba gunakan nama desa terdekat.`)
       }
-      const coordsOrigin = await getCoords(formData.origin)
-      const coordsDest = await getCoords(formData.destination)
+      const coordsOrigin = await getCoords(origin)
+      const coordsDest = await getCoords(destination)
       const routeUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${coordsOrigin[0]},${coordsOrigin[1]}&end=${coordsDest[0]},${coordsDest[1]}&preference=shortest`
       const routeRes = await fetch(routeUrl)
       const routeData = await routeRes.json()
@@ -123,7 +151,9 @@ export default function OfferRidePage() {
         alert(`Catatan: Rute jalan raya tidak ditemukan. Menggunakan estimasi (${distanceInKm} KM).`)
       }
       setDistanceKm(distanceInKm)
-      setFormData(prev => ({ ...prev, price: Math.round(distanceInKm * 1000 / 5000) * 5000 }))
+      
+      // RHF: Menyuntikkan hasil harga ke dalam form dan langsung memvalidasinya
+      setValue('price', Math.round(distanceInKm * 1000 / 5000) * 5000, { shouldValidate: true })
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Terjadi kesalahan'
       alert(msg)
@@ -132,8 +162,8 @@ export default function OfferRidePage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // ── 3. FUNGSI SUBMIT (Hanya akan dipanggil RHF jika Zod meloloskan data)
+  const onSubmitForm = async (values: RideFormValues) => {
     if (!userProfile?.id) {
       alert('Profil pengguna belum dimuat. Coba refresh halaman.')
       return
@@ -142,27 +172,26 @@ export default function OfferRidePage() {
       alert('Pilih minimal satu hari untuk jadwal rutin!')
       return
     }
-    if (!formData.departureTime) {
-      alert('Silakan isi jam keberangkatan.')
+    if (!isRecurring && !values.departureDate) {
+      alert('Silakan isi tanggal keberangkatan.')
       return
     }
 
     setLoading(true)
 
     try {
-      let finalNotes = formData.notes
+      let finalNotes = values.notes || ''
       if (distanceKm) finalNotes = `(Estimasi Jarak: ${distanceKm} km) ` + finalNotes
 
       if (!isRecurring) {
-        // ── Single ride ─────────────────────────────────────────
-        const departureTimestamp = new Date(`${formData.departureDate}T${formData.departureTime}`).toISOString()
+        const departureTimestamp = new Date(`${values.departureDate}T${values.departureTime}`).toISOString()
         const { error } = await supabase.from('rides').insert({
           driver_id: userProfile.id,
-          origin: formData.origin,
-          destination: formData.destination,
+          origin: values.origin,
+          destination: values.destination,
           departure_time: departureTimestamp,
-          available_seats: formData.availableSeats,
-          price: formData.price,
+          available_seats: values.availableSeats,
+          price: values.price,
           notes: finalNotes,
           is_recurring: false,
         })
@@ -170,27 +199,25 @@ export default function OfferRidePage() {
         alert('Mantap! Tumpangan Anda berhasil dipublikasikan.')
 
       } else {
-        // ── Recurring rides ──────────────────────────────────────
-        // Build array of all ride objects to batch insert
         const ridesPayload: any[] = []
 
         for (const dayId of selectedDays) {
           const dayConfig = DAYS.find(d => d.id === dayId)!
-          const firstDate = nextDateForDay(dayConfig.jsDay, formData.departureTime)
+          const firstDate = nextDateForDay(dayConfig.jsDay, values.departureTime)
           if (!firstDate) continue
 
           const dates = getDatesForDay(dayConfig.jsDay, weeksAhead, firstDate)
           for (const date of dates) {
-            const departureTimestamp = new Date(`${date}T${formData.departureTime}`).toISOString()
-            // Skip dates in the past (safety guard)
+            const departureTimestamp = new Date(`${date}T${values.departureTime}`).toISOString()
             if (new Date(departureTimestamp) < new Date()) continue
+
             ridesPayload.push({
               driver_id: userProfile.id,
-              origin: formData.origin,
-              destination: formData.destination,
+              origin: values.origin,
+              destination: values.destination,
               departure_time: departureTimestamp,
-              available_seats: formData.availableSeats,
-              price: formData.price,
+              available_seats: values.availableSeats,
+              price: values.price,
               notes: finalNotes,
               is_recurring: true,
               recurring_days: selectedDays,
@@ -234,19 +261,26 @@ export default function OfferRidePage() {
             <Link href="/home" className="text-gray-500 hover:text-red-500 text-sm font-bold bg-gray-100 px-3 py-1 rounded-lg">✕ Batal</Link>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {/* PERHATIAN: Form sekarang dibungkus oleh handleSubmit dari RHF */}
+          <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col gap-5">
 
             {/* Origin + Destination */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="text-sm font-semibold text-gray-700">📍 Berangkat Dari</label>
-                <input type="text" required onChange={e => setFormData({...formData, origin: e.target.value})}
-                  className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500" placeholder="Cth: Sangsit" />
+                <input type="text" {...register('origin')}
+                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.origin ? 'border-red-500' : 'border-gray-300'}`} 
+                  placeholder="Cth: Sangsit" 
+                />
+                {errors.origin && <p className="text-red-500 text-xs mt-1">{errors.origin.message}</p>}
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">🏁 Tujuan Akhir</label>
-                <input type="text" required onChange={e => setFormData({...formData, destination: e.target.value})}
-                  className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500" placeholder="Cth: Rendang" />
+                <input type="text" {...register('destination')}
+                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.destination ? 'border-red-500' : 'border-gray-300'}`} 
+                  placeholder="Cth: Rendang" 
+                />
+                {errors.destination && <p className="text-red-500 text-xs mt-1">{errors.destination.message}</p>}
               </div>
             </div>
 
@@ -277,17 +311,13 @@ export default function OfferRidePage() {
                   type="button"
                   onClick={() => setIsRecurring(!isRecurring)}
                   className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${isRecurring ? 'bg-purple-600' : 'bg-gray-300'}`}
-                  aria-label="Toggle jadwal rutin"
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isRecurring ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>
               </div>
 
-              {/* Recurring options — shown only when toggled on */}
               {isRecurring && (
                 <div className="mt-4 space-y-4">
-
-                  {/* Day selector */}
                   <div>
                     <p className="text-xs font-semibold text-purple-700 mb-2">Hari yang aktif:</p>
                     <div className="flex gap-2 flex-wrap">
@@ -308,7 +338,6 @@ export default function OfferRidePage() {
                     </div>
                   </div>
 
-                  {/* Weeks ahead selector */}
                   <div>
                     <p className="text-xs font-semibold text-purple-700 mb-2">Berlaku selama:</p>
                     <div className="flex gap-2">
@@ -329,7 +358,6 @@ export default function OfferRidePage() {
                     </div>
                   </div>
 
-                  {/* Preview count */}
                   {selectedDays.length > 0 && (
                     <div className="bg-purple-100 rounded-lg px-3 py-2 text-xs text-purple-800 font-semibold">
                       🗓️ Akan membuat <span className="text-base font-black">{recurringRideCount}</span> jadwal tumpangan
@@ -347,15 +375,18 @@ export default function OfferRidePage() {
               {!isRecurring && (
                 <div>
                   <label className="text-sm font-semibold text-gray-700">📅 Tanggal</label>
-                  <input type="date" required={!isRecurring} min={new Date().toISOString().split('T')[0]}
-                    onChange={e => setFormData({...formData, departureDate: e.target.value})}
-                    className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" />
+                  <input type="date" min={new Date().toISOString().split('T')[0]} {...register('departureDate')}
+                    className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.departureDate ? 'border-red-500' : 'border-gray-300'}`} 
+                  />
+                  {errors.departureDate && <p className="text-red-500 text-xs mt-1">{errors.departureDate.message}</p>}
                 </div>
               )}
               <div className={isRecurring ? 'md:col-span-2' : ''}>
                 <label className="text-sm font-semibold text-gray-700">⏰ Jam (WITA)</label>
-                <input type="time" required onChange={e => setFormData({...formData, departureTime: e.target.value})}
-                  className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" />
+                <input type="time" {...register('departureTime')}
+                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.departureTime ? 'border-red-500' : 'border-gray-300'}`} 
+                />
+                {errors.departureTime && <p className="text-red-500 text-xs mt-1">{errors.departureTime.message}</p>}
                 {isRecurring && (
                   <p className="text-xs text-gray-400 mt-1">Jadwal akan dimulai dari hari terpilih berikutnya.</p>
                 )}
@@ -368,24 +399,27 @@ export default function OfferRidePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="text-sm font-semibold text-gray-700">💺 Kursi Kosong</label>
-                <input type="number" min="1" max="10" required defaultValue={1}
-                  onChange={e => setFormData({...formData, availableSeats: parseInt(e.target.value)})}
-                  className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900" />
+                <input type="number" {...register('availableSeats', { valueAsNumber: true })}
+                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 ${errors.availableSeats ? 'border-red-500' : 'border-gray-300'}`} 
+                />
+                {errors.availableSeats && <p className="text-red-500 text-xs mt-1">{errors.availableSeats.message}</p>}
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700">⛽ Uang Bensin (Rp)</label>
-                <input type="number" min="0" step="1000" required value={formData.price}
-                  onChange={e => setFormData({...formData, price: parseInt(e.target.value) || 0})}
-                  className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900 bg-green-50 focus:ring-2 focus:ring-green-500" />
+                <input type="number" step="1000" {...register('price', { valueAsNumber: true })}
+                  className={`w-full border p-2 rounded-lg mt-1 text-gray-900 bg-green-50 focus:ring-2 focus:ring-green-500 ${errors.price ? 'border-red-500' : 'border-gray-300'}`} 
+                />
+                {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
               </div>
             </div>
 
             {/* Notes */}
             <div>
               <label className="text-sm font-semibold text-gray-700">📝 Catatan Tambahan</label>
-              <textarea onChange={e => setFormData({...formData, notes: e.target.value})}
+              <textarea {...register('notes')}
                 className="w-full border border-gray-300 p-2 rounded-lg mt-1 text-gray-900"
-                placeholder="Titik kumpul yang lebih spesifik..." rows={2} />
+                placeholder="Titik kumpul yang lebih spesifik..." rows={2} 
+              />
             </div>
 
             <button type="submit" disabled={loading || (isRecurring && selectedDays.length === 0)}
