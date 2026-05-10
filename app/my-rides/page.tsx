@@ -17,20 +17,19 @@ export default async function MyRidesPage() {
 
   if (profile?.verification_status !== 'verified') redirect('/verification')
 
-  // PERBAIKAN: Mengembalikan sintaks relasi ke 'passenger:passenger_id' sesuai skema asli Anda
+  
   const { data: rides, error } = await supabase
     .from('rides')
     .select(`
       id, origin, destination, departure_time, available_seats, price, notes, status, created_at, is_recurring, recurring_days,
       bookings (
         id, passenger_id, status, created_at,
-        passenger:passenger_id ( full_name, avatar_url, phone_number )
+        profiles ( full_name, avatar_url, phone_number )
       )
     `)
     .eq('driver_id', user!.id)
     .order('departure_time', { ascending: false })
 
-  // Mencegah error tertelan secara diam-diam
   if (error) {
     console.error("Supabase Query Error:", error.message)
   }
