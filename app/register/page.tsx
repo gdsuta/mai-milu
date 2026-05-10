@@ -8,8 +8,9 @@ import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+// Impor ikon dari Phosphor
+import { Envelope, LockKey, User as UserIcon, Phone, MapPin, Eye, EyeSlash, CircleNotch, PaperPlaneRight } from '@phosphor-icons/react'
 
-// ── 1. SKEMA ZOD UNTUK REGISTRASI ──
 const registerSchema = z.object({
   email: z.string().email("Format email tidak valid"),
   password: z.string().min(6, "Kata sandi minimal 6 karakter"),
@@ -78,10 +79,10 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
 
-  const bg      = colorScheme === 'blue' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'
-  const text    = colorScheme === 'blue' ? 'text-blue-800' : 'text-red-800'
-  const subtext = colorScheme === 'blue' ? 'text-blue-600' : 'text-red-600'
-  const camBtn  = colorScheme === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'
+  const bg      = colorScheme === 'blue' ? 'bg-indigo-50 border-indigo-100' : 'bg-red-50 border-red-100'
+  const text    = colorScheme === 'blue' ? 'text-indigo-800' : 'text-red-800'
+  const subtext = colorScheme === 'blue' ? 'text-indigo-600' : 'text-red-600'
+  const camBtn  = colorScheme === 'blue' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-red-600 hover:bg-red-700'
 
   const processFile = async (raw: File | undefined) => {
     if (!raw) return
@@ -109,9 +110,9 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
     : null
 
   return (
-    <div className={bg + ' p-4 rounded-lg border'}>
+    <div className={bg + ' p-4 rounded-xl border'}>
       <label className={'block text-sm font-bold ' + text + ' mb-1'}>{label}</label>
-      <p className={'text-xs ' + subtext + ' mb-3'}>{hint}</p>
+      <p className={'text-xs ' + subtext + ' mb-4'}>{hint}</p>
 
       <input ref={cameraInputRef} type="file" accept="image/*" capture={capture as any}
         className="hidden" onChange={e => processFile(e.target.files?.[0])} />
@@ -121,37 +122,34 @@ function ImageUploadField({ label, hint, colorScheme, maxWidth, quality, capture
       {!preview && !compressing && (
         <div className="flex gap-2">
           <button type="button" onClick={() => cameraInputRef.current?.click()}
-            className={"flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold text-white transition " + camBtn}>
+            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold text-white transition-colors shadow-sm " + camBtn}>
             📷 Ambil Foto
           </button>
           <button type="button" onClick={() => galleryInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition">
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-sm">
             🖼️ Dari Galeri
           </button>
         </div>
       )}
 
       {compressing && (
-        <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
-          <svg className="animate-spin w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-          </svg>
+        <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-500 font-bold py-4">
+          <CircleNotch weight="bold" className="w-5 h-5 animate-spin text-indigo-500" />
           Mengompresi gambar...
         </div>
       )}
 
       {!compressing && preview && (
-        <div className="flex items-start gap-3">
-          <img src={preview} alt="Preview" className="w-16 h-16 object-cover rounded-lg border shadow-sm shrink-0" />
-          <div className="flex-1 text-xs text-gray-600 space-y-1">
-            <p>Ukuran asli: <span className="font-medium text-gray-700">{formatBytes(originalSize)}</span></p>
-            <p>Setelah kompresi: <span className="font-medium text-green-700">{formatBytes(compressedSize)}</span></p>
+        <div className="flex items-start gap-4">
+          <img src={preview} alt="Preview" className="w-20 h-20 object-cover rounded-xl border-2 border-white shadow-sm shrink-0" />
+          <div className="flex-1 text-xs text-gray-600 space-y-1.5">
+            <p>Ukuran asli: <span className="font-semibold text-gray-800">{formatBytes(originalSize)}</span></p>
+            <p>Setelah kompresi: <span className="font-bold text-green-600">{formatBytes(compressedSize)}</span></p>
             {savedPercent !== null && (savedPercent > 0
-              ? <p className="text-green-600 font-semibold">✅ Dihemat {savedPercent}%</p>
-              : <p className="text-gray-400">Gambar sudah optimal.</p>)}
+              ? <p className="text-green-600 font-bold bg-green-100 inline-block px-2 py-0.5 rounded-md mt-1">✅ Dihemat {savedPercent}%</p>
+              : <p className="text-gray-400 font-medium">Gambar sudah optimal.</p>)}
             <button type="button" onClick={() => { setPreview(null); setOriginalSize(null); setCompressedSize(null); onFileReady(null) }}
-              className="text-red-500 hover:text-red-700 font-semibold pt-1">
+              className="text-red-500 hover:text-red-700 font-bold pt-2 block transition-colors">
               × Ganti Foto
             </button>
           </div>
@@ -168,17 +166,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   
-  // State khusus yang tidak dihandle text input RHF
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [ktpFile, setKtpFile] = useState<File | null>(null)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  // ── 2. INSTALASI REACT HOOK FORM ──
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema)
   })
 
-  // ── 3. FUNGSI SUBMIT (Dijalankan hanya jika Zod lolos) ──
   const onSubmitForm = async (data: RegisterFormValues) => {
     if (!agreedToTerms) { 
       alert('Ups! Anda harus menyetujui Syarat & Ketentuan serta Kebijakan Privasi Mai-Milu sebelum mendaftar.')
@@ -249,116 +244,112 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-10">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <div className="flex justify-center mb-6">
-          <Image src="/logo.png" alt="Mai-Milu Logo" width={80} height={80} className="rounded-full shadow-md" />
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        
+        <div className="flex justify-center mb-6 relative">
+          <div className="absolute inset-0 bg-indigo-100 rounded-full blur-xl opacity-50 w-24 h-24 mx-auto"></div>
+          <Image src="/logo.png" alt="Mai-Milu Logo" width={88} height={88} className="rounded-full shadow-md relative z-10 border-4 border-white" />
         </div>
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">Mai-Milu</h1>
-        <p className="text-center text-gray-500 mb-8">Mari berbagi tumpangan bersama masyarakat Bali lainnya di komunitas Mai-Milu.</p>
+        
+        <h1 className="text-3xl font-black text-center text-indigo-600 mb-2 tracking-tight">Mai-Milu</h1>
+        <p className="text-center text-gray-500 mb-8 text-sm leading-relaxed">
+          Mari berbagi tumpangan bersama masyarakat Bali lainnya di komunitas Mai-Milu.
+        </p>
 
         <form onSubmit={handleSubmit(onSubmitForm)} className="flex flex-col gap-5">
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Email</label>
-            <input 
-              type="email" 
-              {...register('email')}
-              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`} 
-              placeholder="anda@gmail.com" 
-            />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Kata Sandi</label>
-            <div className="relative mt-1">
-              <input 
-                type={showPassword ? 'text' : 'password'} 
-                {...register('password')}
-                className={`w-full border p-2 pr-10 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`} 
-                placeholder="Minimal 6 karakter" 
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                )}
-              </button>
+          
+          {/* Akun */}
+          <div className="space-y-5 bg-gray-50/50 p-5 rounded-xl border border-gray-100">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">1. Data Akun</h3>
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-1.5">Email</label>
+              <div className="relative">
+                <Envelope weight="duotone" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type="email" {...register('email')}
+                  className={`w-full border py-2.5 pl-11 pr-4 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`} 
+                  placeholder="anda@gmail.com" />
+              </div>
+              {errors.email && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.email.message}</p>}
             </div>
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-1.5">Kata Sandi</label>
+              <div className="relative">
+                <LockKey weight="duotone" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type={showPassword ? 'text' : 'password'} {...register('password')}
+                  className={`w-full border py-2.5 pl-11 pr-12 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`} 
+                  placeholder="Minimal 6 karakter" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                  {showPassword ? <EyeSlash weight="duotone" className="w-5 h-5" /> : <Eye weight="duotone" className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.password.message}</p>}
+            </div>
           </div>
 
-          <hr className="my-2" />
-
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Nama Lengkap (Sesuai KTP)</label>
-            <input 
-              type="text" 
-              {...register('fullName')}
-              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`} 
-              placeholder="Putu / Kadek / Komang..." 
-            />
-            {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>}
+          {/* Profil */}
+          <div className="space-y-5 bg-gray-50/50 p-5 rounded-xl border border-gray-100">
+            <h3 className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">2. Data Diri</h3>
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-1.5">Nama Lengkap (Sesuai KTP)</label>
+              <div className="relative">
+                <UserIcon weight="duotone" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type="text" {...register('fullName')}
+                  className={`w-full border py-2.5 pl-11 pr-4 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`} 
+                  placeholder="Putu / Kadek / Komang..." />
+              </div>
+              {errors.fullName && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.fullName.message}</p>}
+            </div>
+            
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-1.5">Nomor WhatsApp</label>
+              <div className="relative">
+                <Phone weight="duotone" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input type="tel" {...register('phone')}
+                  className={`w-full border py-2.5 pl-11 pr-4 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow ${errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`} 
+                  placeholder="081..." />
+              </div>
+              {errors.phone && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.phone.message}</p>}
+            </div>
+            
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-1.5">Alamat Rumah</label>
+              <div className="relative">
+                <MapPin weight="duotone" className="absolute left-3.5 top-3 text-gray-400 w-5 h-5" />
+                <textarea {...register('address')}
+                  className={`w-full border py-2.5 pl-11 pr-4 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-white'}`}
+                  placeholder="Perumahan Delta, Jl Kuta No 8..." rows={3} />
+              </div>
+              {errors.address && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.address.message}</p>}
+            </div>
           </div>
-          
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Nomor WhatsApp</label>
-            <input 
-              type="tel" 
-              {...register('phone')}
-              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'}`} 
-              placeholder="081..." 
-            />
-            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-          </div>
-          
-          <div>
-            <label className="text-sm font-semibold text-gray-700">Alamat Rumah</label>
-            <textarea 
-              {...register('address')}
-              className={`w-full border p-2 rounded-lg mt-1 text-gray-900 focus:ring-2 focus:ring-blue-500 ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
-              placeholder="Perumahan Delta, Jl Kuta No 8, Desa Panji, Buleleng" 
-              rows={2} 
-            />
-            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-          </div>
-
-          <hr className="my-2" />
 
           <ImageUploadField
-            label="1. Unggah Foto Selfie (Jelas)"
-            hint="Ini akan menjadi foto profil Anda. Gambar dikompres otomatis sebelum dikirim."
+            label="📸 Unggah Foto Selfie"
+            hint="Ini akan menjadi foto profil Anda untuk komunitas."
             colorScheme="blue" maxWidth={800} quality={0.82} capture="user" required onFileReady={setAvatarFile}
           />
           <ImageUploadField
-            label="2. Unggah Foto KTP"
-            hint="Dijaga kerahasiaannya untuk keamanan komunitas. Gambar dikompres otomatis sebelum dikirim."
+            label="🪪 Unggah Foto KTP"
+            hint="Hanya digunakan untuk verifikasi keamanan admin."
             colorScheme="red" maxWidth={1400} quality={0.88} capture="environment" required onFileReady={setKtpFile}
           />
 
-          <div className="flex items-start gap-2 p-2 mt-2">
+          <div className="flex items-start gap-3 p-3 mt-2 bg-indigo-50/50 rounded-xl border border-indigo-100">
             <input 
               type="checkbox" 
               id="terms_consent" 
               required 
               checked={agreedToTerms}
               onChange={e => setAgreedToTerms(e.target.checked)}
-              className="w-5 h-5 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+              className="w-5 h-5 mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shadow-sm" 
             />
-            <label htmlFor="terms_consent" className="text-sm text-gray-700 leading-snug">
+            <label htmlFor="terms_consent" className="text-sm text-gray-700 leading-relaxed font-medium">
               Saya menyetujui{' '}
-              <Link href="/terms" target="_blank" className="text-blue-600 font-semibold hover:underline">Syarat & Ketentuan</Link>
+              <Link href="/terms" target="_blank" className="text-indigo-600 font-bold hover:underline">Syarat & Ketentuan</Link>
               {' '}serta{' '}
-              <Link href="/privacy" target="_blank" className="text-blue-600 font-semibold hover:underline">Kebijakan Privasi</Link>
+              <Link href="/privacy" target="_blank" className="text-indigo-600 font-bold hover:underline">Kebijakan Privasi</Link>
               {' '}Mai-Milu.
             </label>
           </div>
@@ -366,11 +357,20 @@ export default function RegisterPage() {
           <button 
             type="submit" 
             disabled={loading || !agreedToTerms}
-            className="w-full bg-blue-600 text-white font-bold p-3 rounded-lg mt-4 hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl mt-4 hover:bg-indigo-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2 text-[15px]"
           >
+            {loading ? <CircleNotch weight="bold" className="w-5 h-5 animate-spin" /> : <PaperPlaneRight weight="fill" className="w-5 h-5" />}
             {loading ? 'Memproses data Anda...' : 'Kirim Data Verifikasi'}
           </button>
         </form>
+
+        {/* PERBAIKAN: Tautan kembali ke Login */}
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <p className="text-center text-sm text-gray-600">
+            Sudah punya akun? <Link href="/login" className="text-indigo-600 font-black hover:underline">Masuk di sini</Link>
+          </p>
+        </div>
+        
       </div>
     </div>
   )
