@@ -41,6 +41,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_passenger_id_fkey"
+            columns: ["passenger_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_ride_id_fkey"
             columns: ["ride_id"]
             isOneToOne: false
@@ -85,6 +92,48 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          booking_id: string
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          sender_id: string
+        }
+        Insert: {
+          booking_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          sender_id: string
+        }
+        Update: {
+          booking_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -493,6 +542,14 @@ export type Database = {
             }
             Returns: string
           }
+      book_ride: {
+        Args: { p_passenger_id: string; p_ride_id: string }
+        Returns: Json
+      }
+      cancel_booking: {
+        Args: { p_booking_id: string; p_passenger_id: string }
+        Returns: Json
+      }
       check_email_registered: {
         Args: { email_input: string }
         Returns: boolean
@@ -671,6 +728,10 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      respond_to_booking: {
+        Args: { p_action: string; p_booking_id: string; p_driver_id: string }
+        Returns: Json
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -1265,7 +1326,12 @@ export type Database = {
       }
     }
     Enums: {
-      booking_status_enum: "pending" | "accepted" | "rejected" | "cancelled"
+      booking_status_enum:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "cancelled"
+        | "confirmed"
       community_category_enum:
         | "residential"
         | "business"
@@ -1408,7 +1474,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      booking_status_enum: ["pending", "accepted", "rejected", "cancelled"],
+      booking_status_enum: [
+        "pending",
+        "accepted",
+        "rejected",
+        "cancelled",
+        "confirmed",
+      ],
       community_category_enum: [
         "residential",
         "business",
