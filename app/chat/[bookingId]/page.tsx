@@ -4,26 +4,29 @@ import { createServer } from '@/lib/supabase/server'
 import ChatRoom from '@/components/ChatRoom'
 import { CaretLeft, User } from '@phosphor-icons/react/dist/ssr'
 
-export default async function ChatPage({ params }: { params: { bookingId: string } }) {
+// PERBAIKAN 1: params harus didefinisikan sebagai Promise
+export default async function ChatPage({ params }: { params: Promise<{ bookingId: string }> }) {
+  // WAJIB di-await untuk mendapatkan ID yang benar
+  const { bookingId } = await params
+  
   const supabase = await createServer()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
 
-  // PERBAIKAN: Menggunakan relasi standar 'rides' dan 'profiles' tanpa alias kompleks
+  // PERBAIKAN 2: Gunakan sintaks relasi yang terbukti sukses di app/my-rides/page.tsx
   const { data: booking, error } = await supabase
     .from('bookings')
     .select(`
       id, passenger_id, status,
-      rides ( driver_id, origin, destination ),
-      profiles ( full_name, avatar_url )
+      ride:ride_id ( driver_id, origin, destination ),
+      passenger:passenger_id ( full_name, avatar_url )
     `)
-    .eq('id', params.bookingId)
+    .eq('id', bookingId)
     .single()
 
-  // Mencegah silent error dengan menampilkannya di log server
   if (error || !booking) {
-    console.error("Chat Fetch Error:", error?.message)
+    console.error("Chat Fetch Error:", error?.message || "Booking tidak ditemukan di database.")
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <h1 className="text-xl font-bold text-gray-800">Obrolan tidak ditemukan</h1>
@@ -35,36 +38,31 @@ export default async function ChatPage({ params }: { params: { bookingId: string
     )
   }
 
-  const ride = booking.rides as any
-  const passenger = booking.profiles as any
+  const ride = booking.ride as any
+  const passenger = booking.passenger as any
   
-  // Ekstrak profil pengemudi secara manual agar kueri utama tidak berat
   const { data: driver } = await supabase
     .from('profiles')
     .select('full_name, avatar_url')
     .eq('id', ride.driver_id)
     .single()
 
-  // Keamanan: Pastikan yang membuka halaman ini HANYA pengemudi atau penumpang
   const isPassenger = user.id === booking.passenger_id
   const isDriver = user.id === ride.driver_id
 
   if (!isPassenger && !isDriver) {
-    redirect('/home') // Tendang pengguna yang mencoba mengintip chat
+    redirect('/home')
   }
 
-  // Tentukan siapa "Lawan Bicara" (Other User) di chat ini
   const otherUserName = isDriver ? passenger.full_name : driver?.full_name
   const otherUserAvatar = isDriver ? passenger.avatar_url : driver?.avatar_url
-  
-  // Tentukan rute kembali (Back button)
   const backRoute = isDriver ? '/my-rides' : '/my-bookings'
 
-  // Ambil riwayat pesan yang sudah ada (menggunakan 'as any' untuk bypass TypeScript sementara)
-  const { data: messages } = await (supabase as any)
+  // PERBAIKAN 3: Karena messages sudah ada di supabase.ts, kita bisa pakai supabase langsung tanpa "as any"
+  const { data: messages } = await supabase
     .from('messages')
     .select('*')
-    .eq('booking_id', params.bookingId)
+    .eq('booking_id', bookingId)
     .order('created_at', { ascending: true })
 
   return (
@@ -104,7 +102,7 @@ export default async function ChatPage({ params }: { params: { bookingId: string
 
       {/* Komponen Ruang Chat Utama */}
       <ChatRoom 
-        bookingId={params.bookingId}
+        bookingId={bookingId}
         currentUserId={user.id}
         otherUserName={otherUserName}
         otherUserAvatar={otherUserAvatar}
