@@ -25,6 +25,7 @@ export default async function MyRidesPage() {
       bookings (
         id, passenger_id, status, created_at,
         profiles ( full_name, avatar_url, phone_number )
+        messages ( is_read, sender_id )
       )
     `)
     .eq('driver_id', user!.id)

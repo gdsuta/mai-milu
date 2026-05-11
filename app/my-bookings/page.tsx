@@ -31,7 +31,8 @@ export default async function MyBookingsPage() {
       ride:ride_id (
         id, origin, destination, departure_time, price, available_seats, notes, status,
         driver:driver_id (id, full_name, avatar_url, phone_number)
-      )
+      ),
+      messages ( is_read, sender_id )
     `)
     .eq('passenger_id', user.id)
     .order('created_at', { ascending: false })
@@ -162,14 +163,25 @@ export default async function MyBookingsPage() {
                             </div>
                           </div>
 
-                          {/* Tombol In-App Chat */}
+                          {/* Tombol In-App Chat dengan Lencana Unread */}
                           <div className="flex flex-wrap gap-2 pt-1">
-                            <Link
-                              href={`/chat/${booking.id}`}
-                              className="flex-1 bg-indigo-600 text-white text-sm font-bold py-2 rounded-lg text-center hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm"
-                            >
-                              💬 Chat Pengemudi
-                            </Link>
+                            
+                            {(() => {
+                               const unreadChatCount = booking.messages?.filter((m: any) => !m.is_read && m.sender_id !== user.id).length || 0;
+                               return (
+                                 <Link
+                                   href={`/chat/${booking.id}`}
+                                   className="relative flex-1 bg-indigo-600 text-white text-sm font-bold py-2 rounded-lg text-center hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm"
+                                 >
+                                   💬 Chat Pengemudi
+                                   {unreadChatCount > 0 && (
+                                     <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white shadow-md ring-2 ring-white">
+                                       {unreadChatCount}
+                                     </span>
+                                   )}
+                                 </Link>
+                               );
+                            })()}
 
                             {/* Hanya bisa dibatalkan jika masih pending/accepted dan belum lewat waktu */}
                             {(booking.status === 'pending' || booking.status === 'accepted') && !isRidePast && (

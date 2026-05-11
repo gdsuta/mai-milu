@@ -58,7 +58,15 @@ export default async function ChatPage({ params }: { params: Promise<{ bookingId
   const otherUserAvatar = isDriver ? passenger.avatar_url : driver?.avatar_url
   const backRoute = isDriver ? '/my-rides' : '/my-bookings'
 
-  // PERBAIKAN 3: Karena messages sudah ada di supabase.ts, kita bisa pakai supabase langsung tanpa "as any"
+  // FUNGSI BARU: Tandai semua pesan masuk sebagai "Telah Dibaca" saat obrolan dibuka
+  await supabase
+    .from('messages')
+    .update({ is_read: true })
+    .eq('booking_id', bookingId)
+    .neq('sender_id', user.id) // Hanya tandai pesan milik lawan bicara
+    .eq('is_read', false)
+
+  // Ambil riwayat pesan yang sudah ada untuk ditampilkan di ruang chat
   const { data: messages } = await supabase
     .from('messages')
     .select('*')

@@ -10,10 +10,12 @@ type Booking = {
   created_at: string
   passenger?: { full_name: string; avatar_url: string | null; phone_number: string } | null
   profiles?: { full_name: string; avatar_url: string | null; phone_number: string } | null
+  messages?: { is_read: boolean; sender_id: string }[]
 }
 
 type Ride = {
   id: string
+  driver_id: string
   origin: string
   destination: string
   departure_time: string
@@ -172,13 +174,23 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide, respo
                                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${booking.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
                                     {booking.status === 'accepted' ? 'Disetujui' : 'Menunggu'}
                                   </span>
-                                  {/* Tombol In-App Chat */}
-                                  <Link 
-                                    href={`/chat/${booking.id}`} 
-                                    className="text-indigo-600 hover:text-indigo-700 flex items-center gap-1 text-[11px] font-bold transition-colors bg-indigo-50 px-2 py-0.5 rounded-md"
-                                  >
-                                    💬 Chat
-                                  </Link>
+                                  {/* Tombol In-App Chat dengan Lencana Unread */}
+                                  {(() => {
+                                    const unreadChatCount = booking.messages?.filter((m: any) => !m.is_read && m.sender_id !== ride.driver_id).length || 0;
+                                    return (
+                                      <Link 
+                                        href={`/chat/${booking.id}`} 
+                                        className="relative text-indigo-600 hover:text-indigo-700 flex items-center gap-1 text-[11px] font-bold transition-colors bg-indigo-50 px-2 py-0.5 rounded-md"
+                                      >
+                                        💬 Chat
+                                        {unreadChatCount > 0 && (
+                                          <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white shadow-sm ring-2 ring-white animate-pulse">
+                                            {unreadChatCount}
+                                          </span>
+                                        )}
+                                      </Link>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>
