@@ -1,5 +1,5 @@
 'use client'
-
+import Link from 'next/link'
 import { useState } from 'react'
 import { Target, CheckCircle, XCircle, Clock, MapPin, Flag, CalendarBlank, Users, Coins, ArrowsClockwise, Trash, Ticket, User, WhatsappLogo } from '@phosphor-icons/react'
 
@@ -172,11 +172,13 @@ export default function MyRidesList({ rides, updateRideStatus, deleteRide, respo
                                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider border ${booking.status === 'accepted' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
                                     {booking.status === 'accepted' ? 'Disetujui' : 'Menunggu'}
                                   </span>
-                                  {waNumber && (
-                                    <a href={`https://wa.me/${waNumber}?text=Halo, saya pengemudi Mai-Milu. ${booking.status === 'accepted' ? 'Pesanan kursi Anda sudah saya setujui.' : 'Terkait pesanan kursi Anda, ...'}`} target="_blank" rel="noopener noreferrer" className="text-[#25D366] hover:text-[#20bd5a] flex items-center gap-1 text-[11px] font-bold transition-colors">
-                                      <WhatsappLogo weight="fill" className="w-3.5 h-3.5" /> Hubungi
-                                    </a>
-                                  )}
+                                  {/* Tombol In-App Chat */}
+                                  <Link 
+                                    href={`/chat/${booking.id}`} 
+                                    className="text-indigo-600 hover:text-indigo-700 flex items-center gap-1 text-[11px] font-bold transition-colors bg-indigo-50 px-2 py-0.5 rounded-md"
+                                  >
+                                    💬 Chat
+                                  </Link>
                                 </div>
                               </div>
                             </div>

@@ -162,14 +162,14 @@ export default async function MyBookingsPage() {
                             </div>
                           </div>
 
-                          {/* Tombol Aksi */}
+                          {/* Tombol In-App Chat */}
                           <div className="flex flex-wrap gap-2 pt-1">
-                            {waNumber && (
-                              <a href={`https://wa.me/${waNumber}?text=Halo! Saya sudah memesan kursi untuk tumpangan ${ride?.origin} menuju ${ride?.destination} pada ${tanggal}. Mohon konfirmasinya.`} target="_blank" rel="noopener noreferrer"
-                                className="flex-1 bg-[#25D366] text-white text-sm font-bold py-3 rounded-xl text-center hover:bg-[#20bd5a] transition-colors flex items-center justify-center gap-2 shadow-sm">
-                                <WhatsappLogo weight="fill" className="w-5 h-5" /> Chat Pengemudi
-                              </a>
-                            )}
+                            <Link
+                              href={`/chat/${booking.id}`}
+                              className="flex-1 bg-indigo-600 text-white text-sm font-bold py-2 rounded-lg text-center hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm"
+                            >
+                              💬 Chat Pengemudi
+                            </Link>
 
                             {/* Hanya bisa dibatalkan jika masih pending/accepted dan belum lewat waktu */}
                             {(booking.status === 'pending' || booking.status === 'accepted') && !isRidePast && (

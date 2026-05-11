@@ -1,5 +1,5 @@
 'use client'
-
+import Link from 'next/link'
 import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -116,13 +116,17 @@ export default function BookingButton({
 
   if (bookingStatus === 'accepted') {
     return (
-      <div className="flex gap-2 w-full">
+      <div className="flex gap-2 w-full mt-2 pt-2 border-t border-gray-100">
         <div className="flex-1 bg-green-50 border border-green-200 rounded-lg px-4 py-2 flex items-center justify-center gap-2">
           <span className="text-green-700 font-bold text-sm">✅ Kursi Terkonfirmasi</span>
         </div>
-        <a href={`https://wa.me/${waNumber}?text=Halo, pemesanan kursi saya sudah dikonfirmasi. Sampai jumpa!`} target="_blank" rel="noopener noreferrer" className="bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-green-600 transition">
-          💬 WA
-        </a>
+        {/* PERBAIKAN: Tombol WA diganti menjadi Link Chat Internal */}
+        <Link
+          href={`/chat/${bookingId}`}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center shadow-sm"
+        >
+          💬 Chat
+        </Link>
       </div>
     )
   }
