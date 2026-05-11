@@ -10,41 +10,47 @@ export default async function ChatPage({ params }: { params: { bookingId: string
 
   if (!user) redirect('/login')
 
-  // 1. Ambil detail pesanan, relasi tumpangan, dan profil pengemudi & penumpang sekaligus
+  // PERBAIKAN: Menggunakan relasi standar 'rides' dan 'profiles' tanpa alias kompleks
   const { data: booking, error } = await supabase
     .from('bookings')
     .select(`
       id, passenger_id, status,
-      ride:ride_id ( driver_id, origin, destination ),
-      passenger:passenger_id ( full_name, avatar_url ),
-      driver_profile:rides!inner( driver_id, profiles!inner( full_name, avatar_url ) )
+      rides ( driver_id, origin, destination ),
+      profiles ( full_name, avatar_url )
     `)
     .eq('id', params.bookingId)
     .single()
 
+  // Mencegah silent error dengan menampilkannya di log server
   if (error || !booking) {
+    console.error("Chat Fetch Error:", error?.message)
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <h1 className="text-xl font-bold text-gray-800">Obrolan tidak ditemukan</h1>
-        <p className="text-gray-500 text-sm mt-2">Pesanan mungkin sudah dihapus.</p>
-        <Link href="/home" className="mt-6 text-indigo-600 font-bold">Kembali ke Beranda</Link>
+        <p className="text-gray-500 text-sm mt-2">Pesanan mungkin sudah dihapus atau tidak valid.</p>
+        <Link href="/home" className="mt-6 text-indigo-600 font-bold bg-white px-6 py-2 rounded-lg shadow-sm border border-gray-200">
+          Kembali ke Beranda
+        </Link>
       </div>
     )
   }
 
-  const ride = booking.ride as any
-  const passenger = booking.passenger as any
+  const ride = booking.rides as any
+  const passenger = booking.profiles as any
   
-  // Karena kueri Supabase untuk relasi bersarang sedikit unik, kita ekstrak profil pengemudi secara manual
-  const driverProfileResponse = await supabase.from('profiles').select('full_name, avatar_url').eq('id', ride.driver_id).single()
-  const driver = driverProfileResponse.data
+  // Ekstrak profil pengemudi secara manual agar kueri utama tidak berat
+  const { data: driver } = await supabase
+    .from('profiles')
+    .select('full_name, avatar_url')
+    .eq('id', ride.driver_id)
+    .single()
 
-  // 2. Keamanan: Pastikan yang membuka halaman ini HANYA pengemudi atau penumpang yang terlibat
+  // Keamanan: Pastikan yang membuka halaman ini HANYA pengemudi atau penumpang
   const isPassenger = user.id === booking.passenger_id
   const isDriver = user.id === ride.driver_id
 
   if (!isPassenger && !isDriver) {
-    redirect('/home') // Tendang pengguna yang mencoba mengintip chat orang lain
+    redirect('/home') // Tendang pengguna yang mencoba mengintip chat
   }
 
   // Tentukan siapa "Lawan Bicara" (Other User) di chat ini
@@ -54,8 +60,8 @@ export default async function ChatPage({ params }: { params: { bookingId: string
   // Tentukan rute kembali (Back button)
   const backRoute = isDriver ? '/my-rides' : '/my-bookings'
 
-  // 3. Ambil riwayat pesan yang sudah ada
-  const { data: messages } = await supabase
+  // Ambil riwayat pesan yang sudah ada (menggunakan 'as any' untuk bypass TypeScript sementara)
+  const { data: messages } = await (supabase as any)
     .from('messages')
     .select('*')
     .eq('booking_id', params.bookingId)
