@@ -1,4 +1,28 @@
 import type { Metadata } from "next";
+import {
+  TreePalm,
+  Ticket,
+  LockKey,
+  Star,
+  Car,
+  MapPin,
+  FlagCheckered,
+  Clock,
+  Repeat,
+  Plus,
+  CheckCircle,
+  IdentificationCard,
+  ChatTeardropText,
+  MapTrifold,
+  Target,
+  ShieldCheck,
+  Camera,
+  Lightning,
+  DeviceMobile,
+  User,
+  WhatsappLogo,
+  XCircle,
+} from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
   title: "Mai-Milu — Bali Carpool Community",
@@ -17,10 +41,6 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <>
-      {/* ── Google Fonts ──
-           Add this to app/layout.tsx if not already present:
-           import { Sora, Plus_Jakarta_Sans } from 'next/font/google'
-           Or keep the <link> tag below in your root layout. ──*/}
       <style
         dangerouslySetInnerHTML={{
           __html: `*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,9 +83,8 @@ nav {
 .nav-logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
 .nav-logo-icon {
   width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--indigo), #6d28d9);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
+  overflow: hidden;
 }
 .nav-logo span { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.15rem; color: var(--indigo); }
 .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
@@ -131,7 +150,7 @@ nav {
 .btn-ghost:hover { background: var(--indigo-l); }
 .hero-rating { display: flex; align-items: center; gap: 1.5rem; margin-top: 1.5rem; }
 .hero-rating-item { display: flex; align-items: center; gap: .5rem; font-size: .85rem; font-weight: 600; color: var(--gray-500); }
-.stars { color: var(--amber); letter-spacing: -.1em; font-size: 1rem; }
+.stars { color: var(--amber); display: flex; gap: 2px; font-size: 1rem; }
 
 /* Phone mockup */
 .hero-phone { position: relative; display: flex; justify-content: center; align-items: flex-end; }
@@ -157,13 +176,13 @@ nav {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 800; color: var(--indigo);
 }
-.phone-nav-dot { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--indigo), #6d28d9); display:flex;align-items:center;justify-content:center;font-size:9px;color:white; }
+.phone-nav-dot { width: 20px; height: 20px; border-radius: 50%; display:flex;align-items:center;justify-content:center;font-size:9px;color:white; overflow: hidden; }
 .phone-content { padding: 10px; flex: 1; overflow: hidden; }
 .phone-offer-btn {
   width: 100%; background: var(--indigo); border-radius: 10px;
   padding: 9px 0; text-align: center; color: white;
   font-family: 'Sora', sans-serif; font-size: 10px; font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 4px;
 }
 .phone-section-title { font-family: 'Sora', sans-serif; font-size: 10px; font-weight: 800; color: var(--gray-900); margin-bottom: 7px; }
 .phone-card {
@@ -174,10 +193,9 @@ nav {
 .phone-card-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
 .phone-driver { font-family: 'Sora', sans-serif; font-size: 9px; font-weight: 700; color: var(--gray-900); }
 .phone-price { font-family: 'Sora', sans-serif; font-size: 10px; font-weight: 800; color: var(--indigo); }
-.phone-badge { background: var(--green-l); color: var(--green); font-size: 7px; font-weight: 700; padding: 2px 5px; border-radius: 4px; display:inline-block;margin-top:2px; }
+.phone-badge { background: var(--green-l); color: var(--green); font-size: 7px; font-weight: 700; padding: 2px 5px; border-radius: 4px; display:inline-flex; align-items: center; gap: 2px; margin-top:2px; }
 .phone-route { font-size: 8px; color: var(--gray-500); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
-.phone-wa-btn { background: #25d366; border-radius: 6px; padding: 4px 0; text-align: center; color: white; font-size: 8px; font-weight: 700; margin-top: 5px; }
-.phone-book-btn { background: var(--indigo); border-radius: 6px; padding: 4px 0; text-align: center; color: white; font-size: 8px; font-weight: 700; margin-top: 5px; }
+.phone-book-btn { background: var(--indigo); border-radius: 6px; padding: 4px 0; text-align: center; color: white; font-size: 8px; font-weight: 700; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .phone-float {
   position: absolute; top: 30%; right: -28px;
   background: var(--white); border-radius: 12px;
@@ -191,7 +209,7 @@ nav {
   background: var(--indigo); border-radius: 12px;
   box-shadow: 0 8px 30px rgba(67,56,202,.3); padding: 8px 12px;
   font-size: 8px; font-family: 'Sora', sans-serif; font-weight: 700; color: white;
-  white-space: nowrap;
+  white-space: nowrap; display: flex; align-items: center; gap: 4px;
 }
 @media(max-width:900px){
   .hero-inner { grid-template-columns: 1fr; text-align: center; }
@@ -199,7 +217,7 @@ nav {
   .hero-btns { justify-content: center; }
   .hero-rating { justify-content: center; }
   .phone-float,.phone-float2 { display: none; }
-  .hero p { max-width: 100%; }
+  .hero p { max-width: 100%; margin-left: auto; margin-right: auto; }
 }
 
 /* ── Stats ───────────────────────────────────────── */
@@ -210,7 +228,7 @@ nav {
   max-width: 1120px; margin: auto;
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center;
 }
-.stat-num { font-family: 'Sora', sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--white); line-height: 1; }
+.stat-num { font-family: 'Sora', sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--white); line-height: 1; display: flex; justify-content: center; align-items: center; gap: 4px; }
 .stat-label { font-size: .85rem; font-weight: 600; color: rgba(255,255,255,.65); margin-top: .4rem; }
 @media(max-width:640px){ .stats-inner { grid-template-columns: repeat(2, 1fr); } }
 
@@ -244,7 +262,7 @@ nav {
 .step:last-child .step-num::after { display: none; }
 .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
 .step p { font-size: .88rem; color: var(--gray-500); line-height: 1.6; }
-.step-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+.step-icon { font-size: 1.8rem; margin-bottom: .75rem; display: flex; justify-content: center; color: var(--indigo); }
 @media(max-width:640px){ .steps { grid-template-columns: 1fr; } .step-num::after { display: none; } }
 
 /* ── Features ────────────────────────────────────── */
@@ -262,10 +280,10 @@ nav {
 .feat-icon {
   width: 48px; height: 48px; border-radius: 14px;
   background: var(--indigo-l); display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; margin-bottom: 1.1rem;
+  font-size: 1.4rem; margin-bottom: 1.1rem; color: var(--indigo);
 }
-.feat-card.green .feat-icon { background: var(--green-l); }
-.feat-card.amber .feat-icon { background: var(--amber-l); }
+.feat-card.green .feat-icon { background: var(--green-l); color: var(--green); }
+.feat-card.amber .feat-icon { background: var(--amber-l); color: var(--amber); }
 .feat-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
 .feat-card p { font-size: .87rem; color: var(--gray-500); line-height: 1.65; }
 @media(max-width:900px){ .features-grid { grid-template-columns: repeat(2,1fr); } }
@@ -294,7 +312,7 @@ nav {
   padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem;
   box-shadow: 0 2px 12px rgba(0,0,0,.06);
 }
-.trust-item-icon { font-size: 1.5rem; flex-shrink: 0; }
+.trust-item-icon { font-size: 1.5rem; flex-shrink: 0; color: var(--indigo); }
 .trust-item h4 { font-size: .9rem; font-weight: 700; margin-bottom: .15rem; }
 .trust-item p { font-size: .8rem; color: var(--gray-500); }
 @media(max-width:780px){ .trust-inner { grid-template-columns: 1fr; } }
@@ -312,7 +330,7 @@ nav {
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
   border-radius: var(--radius-xl); padding: 1.75rem;
 }
-.review-stars { color: var(--amber); font-size: 1rem; margin-bottom: .75rem; }
+.review-stars { color: var(--amber); display: flex; gap: 2px; font-size: 1rem; margin-bottom: .75rem; }
 .review-text { font-size: .9rem; color: rgba(255,255,255,.8); line-height: 1.7; margin-bottom: 1.25rem; }
 .review-author { display: flex; align-items: center; gap: .75rem; }
 .review-avatar {
@@ -333,8 +351,9 @@ nav {
 .compare-table td { padding: .85rem 1.2rem; border-bottom: 1px solid var(--gray-200); }
 .compare-table tr:last-child td { border-bottom: none; }
 .compare-table tr:nth-child(even) td { background: var(--gray-100); }
-.yes { color: var(--green); font-size: 1.1rem; }
-.no  { color: #ef4444; font-size: 1.1rem; }
+.compare-table td > div { display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start; }
+.yes { color: var(--green); font-size: 1.2em; }
+.no  { color: #ef4444; font-size: 1.2em; }
 
 /* ── CTA ─────────────────────────────────────────── */
 .cta {
@@ -398,7 +417,13 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
       <nav>
         <div className="nav-inner">
           <a href="#" className="nav-logo">
-            <div className="nav-logo-icon">🚗</div>
+            <div className="nav-logo-icon">
+              <img
+                src="/icon-72x72.png"
+                alt="Mai-Milu Logo"
+                style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+              />
+            </div>
             <span>Mai-Milu</span>
           </a>
           <ul className="nav-links">
@@ -424,7 +449,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
       <section className="hero">
         <div className="hero-inner">
           <div>
-            <div className="hero-badge">🌴 Komunitas Carpool Bali</div>
+            <div className="hero-badge">
+              <TreePalm weight="fill" size="1.2em" /> Komunitas Carpool Bali
+            </div>
             <h1>
               Berbagi Tumpangan
               <br />
@@ -440,7 +467,7 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
                 href="https://mai-milu.vercel.app/register"
                 className="btn-primary"
               >
-                🎫 Daftar Sekarang
+                <Ticket weight="fill" size="1.2em" /> Daftar Sekarang
               </a>
               <a href="https://mai-milu.vercel.app/login" className="btn-ghost">
                 Sudah punya akun?
@@ -448,9 +475,18 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </div>
             <div className="hero-rating">
               <div className="hero-rating-item">
-                <span className="stars">★★★★★</span> Pengemudi Terverifikasi
+                <div className="stars">
+                  <Star weight="fill" />
+                  <Star weight="fill" />
+                  <Star weight="fill" />
+                  <Star weight="fill" />
+                  <Star weight="fill" />
+                </div>{" "}
+                Pengemudi Terverifikasi
               </div>
-              <div className="hero-rating-item">🔒 Sistem Pemesanan Aman</div>
+              <div className="hero-rating-item">
+                <LockKey weight="fill" size="1.2em" /> Sistem Pemesanan Aman
+              </div>
             </div>
           </div>
 
@@ -459,18 +495,33 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               <div className="phone-notch"></div>
               <div className="phone-screen">
                 <div className="phone-nav">
-                  <div className="phone-nav-dot">🚗</div>
+                  <div className="phone-nav-dot">
+                    <img
+                      src="/icon-72x72.png"
+                      alt="Mai-Milu Logo"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  </div>
                   Mai-Milu
                 </div>
                 <div className="phone-content">
-                  <div className="phone-offer-btn">➕ Tawarkan Tumpangan</div>
+                  <div className="phone-offer-btn">
+                    <Plus weight="bold" size="1.2em" /> Tawarkan Tumpangan
+                  </div>
                   <div className="phone-section-title">Tumpangan Tersedia</div>
 
                   <div className="phone-card">
                     <div className="phone-card-row1">
                       <div>
                         <div className="phone-driver">I Made Prema</div>
-                        <div className="phone-badge">✅ Terverifikasi</div>
+                        <div className="phone-badge">
+                          <CheckCircle weight="fill" size="1.2em" />{" "}
+                          Terverifikasi
+                        </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div className="phone-price">Rp 12.000</div>
@@ -480,19 +531,34 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
                       </div>
                     </div>
                     <div className="phone-route">
-                      📍 Singaraja → 🏁 Denpasar
+                      <MapPin weight="fill" size="1.2em" /> Singaraja →{" "}
+                      <FlagCheckered weight="fill" size="1.2em" /> Denpasar
                     </div>
-                    <div style={{ fontSize: "8px", color: "#6b7280" }}>
-                      ⏰ Selasa, 5 Mei · 07.30 WITA
+                    <div
+                      style={{
+                        fontSize: "8px",
+                        color: "#6b7280",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <Clock weight="fill" size="1.2em" /> Selasa, 5 Mei · 07.30
+                      WITA
                     </div>
-                    <div className="phone-book-btn">🎫 Pesan Kursi</div>
+                    <div className="phone-book-btn">
+                      <Ticket weight="fill" size="1.2em" /> Pesan Kursi
+                    </div>
                   </div>
 
                   <div className="phone-card">
                     <div className="phone-card-row1">
                       <div>
                         <div className="phone-driver">Ni Putu Kaila</div>
-                        <div className="phone-badge">✅ Terverifikasi</div>
+                        <div className="phone-badge">
+                          <CheckCircle weight="fill" size="1.2em" />{" "}
+                          Terverifikasi
+                        </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div className="phone-price">Rp 20.000</div>
@@ -501,11 +567,25 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
                         </div>
                       </div>
                     </div>
-                    <div className="phone-route">📍 Sangsit → 🏁 Ubud</div>
-                    <div style={{ fontSize: "8px", color: "#6b7280" }}>
-                      ⏰ Senin–Jumat · 08.00 WITA 🔁
+                    <div className="phone-route">
+                      <MapPin weight="fill" size="1.2em" /> Sangsit →{" "}
+                      <FlagCheckered weight="fill" size="1.2em" /> Ubud
                     </div>
-                    <div className="phone-book-btn">🎫 Pesan Kursi</div>
+                    <div
+                      style={{
+                        fontSize: "8px",
+                        color: "#6b7280",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      <Clock weight="fill" size="1.2em" /> Senin–Jumat · 08.00
+                      WITA <Repeat weight="bold" size="1.2em" />
+                    </div>
+                    <div className="phone-book-btn">
+                      <Ticket weight="fill" size="1.2em" /> Pesan Kursi
+                    </div>
                   </div>
                 </div>
               </div>
@@ -513,7 +593,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             <div className="phone-float">
               <span className="phone-float-dot"></span>3 tumpangan aktif
             </div>
-            <div className="phone-float2">🎫 Kursi Terkonfirmasi!</div>
+            <div className="phone-float2">
+              <Ticket weight="fill" size="1.2em" /> Kursi Terkonfirmasi!
+            </div>
           </div>
         </div>
       </section>
@@ -534,7 +616,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             <div className="stat-label">Kabupaten di Bali</div>
           </div>
           <div className="fade-up">
-            <div className="stat-num">4,8 ★</div>
+            <div className="stat-num">
+              4,8 <Star weight="fill" size="0.8em" color="var(--amber)" />
+            </div>
             <div className="stat-label">Rating Rata-rata</div>
           </div>
         </div>
@@ -549,7 +633,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
         </div>
         <div className="steps">
           <div className="step fade-up">
-            <div className="step-icon">🪪</div>
+            <div className="step-icon">
+              <IdentificationCard weight="duotone" size="1em" />
+            </div>
             <div className="step-num">1</div>
             <h3>Daftar & Verifikasi KTP</h3>
             <p>
@@ -558,7 +644,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="step fade-up">
-            <div className="step-icon">🚗</div>
+            <div className="step-icon">
+              <Car weight="duotone" size="1em" />
+            </div>
             <div className="step-num">2</div>
             <h3>Temukan atau Tawarkan Tumpangan</h3>
             <p>
@@ -567,7 +655,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="step fade-up">
-            <div className="step-icon">🎫</div>
+            <div className="step-icon">
+              <Ticket weight="duotone" size="1em" />
+            </div>
             <div className="step-num">3</div>
             <h3>Pesan Kursi & Jalan Bersama</h3>
             <p>
@@ -587,7 +677,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
         </div>
         <div className="features-grid">
           <div className="feat-card fade-up">
-            <div className="feat-icon">🔁</div>
+            <div className="feat-icon">
+              <Repeat weight="duotone" size="1em" />
+            </div>
             <h3>Jadwal Rutin (Sen–Jum)</h3>
             <p>
               Pengemudi bisa buat jadwal berulang hingga 8 minggu ke depan.
@@ -595,7 +687,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="feat-card green fade-up">
-            <div className="feat-icon">🎫</div>
+            <div className="feat-icon">
+              <Ticket weight="duotone" size="1em" />
+            </div>
             <h3>Sistem Pemesanan Kursi</h3>
             <p>
               Penumpang bisa pesan kursi langsung di aplikasi. Pengemudi
@@ -603,7 +697,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="feat-card amber fade-up">
-            <div className="feat-icon">💬</div>
+            <div className="feat-icon">
+              <ChatTeardropText weight="duotone" size="1em" />
+            </div>
             <h3>In-App Chat Real-time</h3>
             <p>
               Komunikasi driver-penumpang langsung di dalam app dengan Supabase
@@ -611,7 +707,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="feat-card fade-up">
-            <div className="feat-icon">⭐</div>
+            <div className="feat-icon">
+              <Star weight="duotone" size="1em" />
+            </div>
             <h3>Rating & Ulasan Driver</h3>
             <p>
               Setelah perjalanan, penumpang beri ulasan 1–5 bintang. Profil
@@ -619,7 +717,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="feat-card green fade-up">
-            <div className="feat-icon">🗺️</div>
+            <div className="feat-icon">
+              <MapTrifold weight="duotone" size="1em" />
+            </div>
             <h3>Kalkulator Jarak Otomatis</h3>
             <p>
               Integrasi OpenRouteService + Nominatim OSM menghitung estimasi
@@ -627,7 +727,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </p>
           </div>
           <div className="feat-card amber fade-up">
-            <div className="feat-icon">🎯</div>
+            <div className="feat-icon">
+              <Target weight="duotone" size="1em" />
+            </div>
             <h3>Algoritma Pencocokan Rute</h3>
             <p>
               Tiga tumpangan paling cocok muncul di atas listing — berdasarkan
@@ -667,23 +769,37 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               tumpangan.
             </p>
             <div className="trust-pills">
-              <div className="trust-pill">🪪 Verifikasi KTP</div>
-              <div className="trust-pill">🔒 Row Level Security</div>
-              <div className="trust-pill">🛡️ RPC Atomik</div>
-              <div className="trust-pill">📷 Foto Selfie Wajib</div>
-              <div className="trust-pill">⚡ Transaksi Aman</div>
+              <div className="trust-pill">
+                <IdentificationCard weight="fill" size="1.2em" /> Verifikasi KTP
+              </div>
+              <div className="trust-pill">
+                <LockKey weight="fill" size="1.2em" /> Row Level Security
+              </div>
+              <div className="trust-pill">
+                <ShieldCheck weight="fill" size="1.2em" /> RPC Atomik
+              </div>
+              <div className="trust-pill">
+                <Camera weight="fill" size="1.2em" /> Foto Selfie Wajib
+              </div>
+              <div className="trust-pill">
+                <Lightning weight="fill" size="1.2em" /> Transaksi Aman
+              </div>
             </div>
           </div>
           <div className="trust-visual">
             <div className="trust-item">
-              <div className="trust-item-icon">🪪</div>
+              <div className="trust-item-icon">
+                <IdentificationCard weight="duotone" size="1em" />
+              </div>
               <div>
                 <h4>Verifikasi KTP Wajib</h4>
                 <p>Foto KTP + selfie dikonfirmasi admin sebelum akun aktif</p>
               </div>
             </div>
             <div className="trust-item">
-              <div className="trust-item-icon">🔒</div>
+              <div className="trust-item-icon">
+                <LockKey weight="duotone" size="1em" />
+              </div>
               <div>
                 <h4>Database Terlindungi RLS</h4>
                 <p>
@@ -693,7 +809,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               </div>
             </div>
             <div className="trust-item">
-              <div className="trust-item-icon">🎫</div>
+              <div className="trust-item-icon">
+                <Ticket weight="duotone" size="1em" />
+              </div>
               <div>
                 <h4>Pemesanan Anti-Race Condition</h4>
                 <p>
@@ -703,7 +821,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               </div>
             </div>
             <div className="trust-item">
-              <div className="trust-item-icon">📱</div>
+              <div className="trust-item-icon">
+                <DeviceMobile weight="duotone" size="1em" />
+              </div>
               <div>
                 <h4>PWA Installable</h4>
                 <p>
@@ -729,7 +849,13 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
           </div>
           <div className="reviews">
             <div className="review fade-up">
-              <div className="review-stars">★★★★★</div>
+              <div className="review-stars">
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+              </div>
               <p className="review-text">
                 "Aplikasinya sangat membantu untuk perjalanan rutin
                 Singaraja–Denpasar. Jadwal rutin mingguan bikin saya hemat
@@ -738,9 +864,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               <div className="review-author">
                 <div
                   className="review-avatar"
-                  style={{ background: "#4338ca20" }}
+                  style={{ background: "#4338ca20", color: "#a5b4fc" }}
                 >
-                  🧑
+                  <User weight="fill" size="1.2em" />
                 </div>
                 <div>
                   <div className="review-author-name">I Made Wirawan</div>
@@ -751,7 +877,13 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               </div>
             </div>
             <div className="review fade-up">
-              <div className="review-stars">★★★★★</div>
+              <div className="review-stars">
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+              </div>
               <p className="review-text">
                 "Sebagai penumpang, saya merasa aman karena setiap driver sudah
                 terverifikasi KTP. Fitur chat langsung di app juga sangat
@@ -760,9 +892,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               <div className="review-author">
                 <div
                   className="review-avatar"
-                  style={{ background: "#16a34a20" }}
+                  style={{ background: "#16a34a20", color: "#86efac" }}
                 >
-                  👩
+                  <User weight="fill" size="1.2em" />
                 </div>
                 <div>
                   <div className="review-author-name">Ni Luh Ayu Pratiwi</div>
@@ -771,7 +903,13 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               </div>
             </div>
             <div className="review fade-up">
-              <div className="review-stars">★★★★☆</div>
+              <div className="review-stars">
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="fill" />
+                <Star weight="duotone" />
+              </div>
               <p className="review-text">
                 "Sistem pemesanan kursinya jauh lebih rapi dari grup WhatsApp
                 dulu. Penumpang pesan, saya konfirmasi — beres. Kami semua
@@ -780,9 +918,9 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               <div className="review-author">
                 <div
                   className="review-avatar"
-                  style={{ background: "#f59e0b20" }}
+                  style={{ background: "#f59e0b20", color: "#fcd34d" }}
                 >
-                  🧔
+                  <User weight="fill" size="1.2em" />
                 </div>
                 <div>
                   <div className="review-author-name">Kadek Bagus Ariawan</div>
@@ -808,50 +946,111 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             <thead>
               <tr>
                 <th>Fitur</th>
-                <th>🚗 Mai-Milu</th>
-                <th>💬 Grup WA</th>
+                <th>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <img
+                      src="/icon-72x72.png"
+                      alt="Mai-Milu Logo"
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                      }}
+                    />
+                    Mai-Milu
+                  </div>
+                </th>
+                <th>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <WhatsappLogo weight="fill" size="1.2em" /> Grup WA
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Verifikasi identitas pengemudi</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Pemesanan kursi terstruktur</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Chat langsung driver–penumpang</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Jadwal rutin (Sen–Jum)</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Kalkulator harga otomatis</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Rating & ulasan driver</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Profil driver publik</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
               <tr>
                 <td>Bisa diinstall di HP (PWA)</td>
-                <td className="yes">✅</td>
-                <td className="no">❌</td>
+                <td>
+                  <CheckCircle className="yes" weight="fill" />
+                </td>
+                <td>
+                  <XCircle className="no" weight="fill" />
+                </td>
               </tr>
             </tbody>
           </table>
@@ -871,13 +1070,10 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
               href="https://mai-milu.vercel.app/register"
               className="btn-white"
             >
-              🎫 Daftar Gratis
+              <Ticket weight="fill" size="1.2em" /> Daftar Gratis
             </a>
-            <a
-              href="https://github.com/gdsuta/mai-milu"
-              className="btn-outline-white"
-            >
-              ⭐ GitHub
+            <a href="https://mai-milu.vercel.app/login" className="btn-ghost">
+              Sudah punya akun? Login
             </a>
           </div>
         </div>
@@ -887,7 +1083,14 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
       <footer>
         <div className="footer-inner">
           <div>
-            <div className="footer-brand">🚗 Mai-Milu</div>
+            <div className="footer-brand">
+              <img
+                src="/icon-72x72.png"
+                alt="Mai-Milu Logo"
+                style={{ width: "24px", height: "24px", borderRadius: "50%" }}
+              />{" "}
+              Mai-Milu
+            </div>
             <p className="footer-desc">
               Platform carpooling komunitas untuk warga Bali. Mengurangi macet,
               menghemat biaya, mempererat semeton.
@@ -931,7 +1134,7 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             <h5>Pengembang</h5>
             <ul>
               <li>
-                <p>Gede Suta Pinatih</p>
+                <h5>Gede Suta Pinatih</h5>
               </li>
 
               <li>
@@ -947,7 +1150,6 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
           <div style={{ display: "flex", gap: "1.5rem" }}>
             <a href="https://mai-milu.vercel.app/terms">Syarat</a>
             <a href="https://mai-milu.vercel.app/privacy">Privasi</a>
-            <a href="https://github.com/gdsuta/mai-milu">GitHub</a>
           </div>
         </div>
       </footer>
