@@ -925,20 +925,15 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
                   Kebijakan Privasi
                 </a>
               </li>
-              <li>
-                <a href="https://github.com/gdsuta/mai-milu">GitHub</a>
-              </li>
             </ul>
           </div>
           <div className="footer-col">
             <h5>Pengembang</h5>
             <ul>
               <li>
-                <a href="https://github.com/gdsuta">Gede Suta Pinatih</a>
+                <p>Gede Suta Pinatih</p>
               </li>
-              <li>
-                <a href="https://github.com/gdsuta/mai-milu">Source Code</a>
-              </li>
+
               <li>
                 <a href="https://mai-milu.vercel.app">Live App</a>
               </li>
