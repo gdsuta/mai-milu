@@ -22,6 +22,7 @@ import {
   User,
   WhatsappLogo,
   XCircle,
+  List,
 } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
@@ -76,7 +77,7 @@ nav {
   padding: 0 1.5rem;
 }
 .nav-inner {
-  max-width: 1120px; margin: auto;
+  max-width: 1120px; margin: auto; position: relative;
   display: flex; align-items: center; justify-content: space-between;
   height: 64px;
 }
@@ -95,7 +96,28 @@ nav {
   padding: .5rem 1.2rem; border-radius: 8px; transition: background .2s !important;
 }
 .nav-cta:hover { background: var(--indigo-d) !important; }
-@media(max-width:640px){.nav-links{display:none;}}
+
+/* Mobile Menu Fix */
+.mobile-menu-toggle { display: none; }
+.mobile-menu-btn { display: none; color: var(--gray-900); cursor: pointer; }
+.developer-name { color: var(--white); font-weight: 700; font-size: .95rem; margin-bottom: .4rem; font-family: 'Sora', sans-serif; }
+
+@media(max-width:768px) {
+  .mobile-menu-btn { display: flex; align-items: center; }
+  .nav-links {
+    display: none;
+    position: absolute; top: 100%; left: -1.5rem; right: -1.5rem;
+    background: rgba(255,255,255,0.98);
+    flex-direction: column; padding: 1.5rem; gap: 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    align-items: flex-start;
+  }
+  .mobile-menu-toggle:checked ~ .nav-links { display: flex; }
+  .nav-links li { width: 100%; }
+  .nav-links a { display: block; width: 100%; }
+  .nav-cta { text-align: center; display: block; }
+}
 
 /* ── Hero ────────────────────────────────────────── */
 .hero {
@@ -426,6 +448,17 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             </div>
             <span>Mai-Milu</span>
           </a>
+
+          {/* Mobile Menu Toggle */}
+          <input
+            type="checkbox"
+            id="menu-toggle"
+            className="mobile-menu-toggle"
+          />
+          <label htmlFor="menu-toggle" className="mobile-menu-btn">
+            <List size="1.8em" weight="bold" />
+          </label>
+
           <ul className="nav-links">
             <li>
               <a href="#fitur">Fitur</a>
@@ -1072,7 +1105,11 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             >
               <Ticket weight="fill" size="1.2em" /> Daftar Gratis
             </a>
-            <a href="https://mai-milu.vercel.app/login" className="btn-ghost">
+            {/* PERBAIKAN: Tombol Login kini menggunakan .btn-outline-white */}
+            <a
+              href="https://mai-milu.vercel.app/login"
+              className="btn-outline-white"
+            >
               Sudah punya akun? Login
             </a>
           </div>
@@ -1133,12 +1170,19 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
           <div className="footer-col">
             <h5>Pengembang</h5>
             <ul>
+              {/* PERBAIKAN: Nama pengembang dan kontak baru */}
+              <li className="developer-name">Gede Suta Pinatih</li>
               <li>
-                <h5>Gede Suta Pinatih</h5>
+                <a
+                  href="https://t.me/+6281239156586"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Telegram: +62 812-3915-6586
+                </a>
               </li>
-
               <li>
-                <a href="https://mai-milu.vercel.app">Live App</a>
+                <a href="mailto:gdsuta@gmail.com">Email: gdsuta@gmail.com</a>
               </li>
             </ul>
           </div>
