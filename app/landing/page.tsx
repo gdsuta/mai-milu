@@ -731,7 +731,7 @@ export default function LandingPage() {
             <div className="footer-brand">
               <img
                 src="/icon-72x72.png"
-                alt="Mai-Milu Logo"
+                alt="Logo"
                 style={{ width: "24px", height: "24px", borderRadius: "50%" }}
               />{" "}
               Mai-Milu
@@ -783,27 +783,9 @@ export default function LandingPage() {
               </li>
             </ul>
           </div>
-
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <a
-              href="https://mai-milu.vercel.app/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Syarat
-            </a>
-            <a
-              href="https://mai-milu.vercel.app/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Privasi
-            </a>
-          </div>
           <div className="footer-col">
             <h5>Pengembang</h5>
             <ul>
-              {/* PERBAIKAN: Nama pengembang dan kontak baru */}
               <li className="developer-name">Gede Suta Pinatih</li>
               <li>
                 <a
@@ -820,14 +802,11 @@ export default function LandingPage() {
             </ul>
           </div>
         </div>
+
         <div className="footer-bottom">
-          <span>
+          <span className="text-xs">
             © 2026 Mai-Milu — Bali Carpool Community. Made with ❤️ in Bali.
           </span>
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <a href="https://mai-milu.vercel.app/terms">Syarat</a>
-            <a href="https://mai-milu.vercel.app/privacy">Privasi</a>
-          </div>
         </div>
       </footer>
     </>
