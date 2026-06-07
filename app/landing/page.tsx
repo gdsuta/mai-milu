@@ -1,5 +1,4 @@
-import "./globals.css";
-import "./landing.css";
+import "../landing.css";
 import type { Metadata } from "next";
 import {
   TreePalm,

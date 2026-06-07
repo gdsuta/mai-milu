@@ -1,6 +1,5 @@
 "use client";
-import "./globals.css";
-import "./landing.css";
+import "../landing.css";
 import { X } from "@phosphor-icons/react";
 
 export default function PrivacyPage() {
