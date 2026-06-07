@@ -34,7 +34,7 @@ export default async function MyRidesPage() {
     `,
     )
     .eq("driver_id", user.id)
-    .order("departure_time", { ascending: false });
+    .order("departure_time", { ascending: true });
 
   if (error) console.error("Supabase Query Error:", error.message);
 
