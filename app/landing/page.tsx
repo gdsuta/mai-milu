@@ -1156,16 +1156,41 @@ footer { background: var(--gray-900); padding: 3.5rem 1.5rem 2rem; color: rgba(2
             <h5>Informasi</h5>
             <ul>
               <li>
-                <a href="https://mai-milu.vercel.app/terms">
+                <a
+                  href="https://mai-milu.vercel.app/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Syarat & Ketentuan
                 </a>
               </li>
               <li>
-                <a href="https://mai-milu.vercel.app/privacy">
+                <a
+                  href="https://mai-milu.vercel.app/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Kebijakan Privasi
                 </a>
               </li>
             </ul>
+          </div>
+
+          <div style={{ display: "flex", gap: "1.5rem" }}>
+            <a
+              href="https://mai-milu.vercel.app/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Syarat
+            </a>
+            <a
+              href="https://mai-milu.vercel.app/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privasi
+            </a>
           </div>
           <div className="footer-col">
             <h5>Pengembang</h5>
