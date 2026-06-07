@@ -376,13 +376,15 @@ export default function RegisterPage() {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
         <div className="flex justify-center mb-6 relative">
           <div className="absolute inset-0 bg-indigo-100 rounded-full blur-xl opacity-50 w-24 h-24 mx-auto"></div>
-          <Image
-            src="/logo.png"
-            alt="Mai-Milu Logo"
-            width={88}
-            height={88}
-            className="rounded-full shadow-md relative z-10 border-4 border-white"
-          />
+          <Link href="/landing">
+            <Image
+              src="/logo.png"
+              alt="Mai-Milu Logo"
+              width={88}
+              height={88}
+              className="rounded-full shadow-md relative z-10 border-4 border-white cursor-pointer hover:scale-105 transition-transform"
+            />
+          </Link>
         </div>
 
         <h1 className="text-3xl font-black text-center text-indigo-600 mb-2 tracking-tight">

@@ -458,6 +458,17 @@ nav {
     margin-right: auto;
   }
 }
+/* Style untuk gambar tambahan di hero */
+.mobile-hero-img {
+  display: none; /* Sembunyikan secara default di desktop */
+}
+
+@media (max-width: 900px) {
+  .mobile-hero-img {
+    display: block; /* Tampilkan hanya saat layar di bawah 900px */
+    margin-bottom: 1rem;
+  }
+}
 
 /* ── Stats ───────────────────────────────────────── */
 .stats {

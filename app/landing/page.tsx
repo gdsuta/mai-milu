@@ -98,6 +98,18 @@ export default function LandingPage() {
               <br />
               di <em>Bali</em>, Lebih Mudah.
             </h1>
+            {/* Visual tambahan untuk Mobile View */}
+            <div className="mobile-hero-img">
+              <img
+                src="/mai-milu-image-logo.png"
+                alt="Mai-Milu Visual"
+                style={{
+                  width: "100%",
+                  maxWidth: "300px",
+                  margin: "0 auto 1.5rem",
+                }}
+              />
+            </div>
             <p>
               Mai-Milu menghubungkan pengemudi dengan kursi kosong dan penumpang
               yang searah. Hemat biaya, kurangi macet, bangun komunitas — mulai
